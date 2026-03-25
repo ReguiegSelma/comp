@@ -1,72 +1,43 @@
-/*
- * ============================================================
- *  ANALYSEUR LEXICAL — MiniAlgo
- *  Outil : Flex
- *  Rôle  : découper le code source en tokens (unités lexicales)
- *          et remplir la table des symboles
- * ============================================================
- */
+
 
 %{
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "symtable.h"       /* table des symboles partagée  */
-#include "parser.tab.h"     /* tokens générés par Bison     */
+#include "symtable.h"     
+#include "parser.tab.h"     
 
-/* Compteurs de position pour les messages d'erreur */
 int line_num = 1;
 int col_num  = 1;
 
-/* Macro utilitaire : avance le compteur de colonnes */
 #define ADVANCE_COL  col_num += yyleng
 
-/* Affiche une erreur lexicale formatée */
 void lex_error(const char *msg) {
     fprintf(stderr, "Erreur Lexicale : ligne %d , colonne %d , element \"%s\" — %s\n",
             line_num, col_num, yytext, msg);
 }
 %}
 
-/* ---- Options Flex ---- */
-%option noyywrap       /* pas de fichier supplémentaire à analyser  */
-%option yylineno       /* flex maintient yylineno automatiquement   */
-
-/* ------------------------------------------------------------------ */
-/*  DÉFINITIONS DES EXPRESSIONS RÉGULIÈRES (abréviations réutilisables) */
-/* ------------------------------------------------------------------ */
+%option noyywrap       
+%option yylineno      
 
 LETTRE          [a-zA-Z]
 CHIFFRE         [0-9]
 UNDERSCORE      _
 
-/* Identificateur : commence par une lettre, suivi de lettres/chiffres/_ */
-/* La longueur max (8 car.) est vérifiée dans l'action, pas ici          */
 IDENTIFICATEUR  {LETTRE}({LETTRE}|{CHIFFRE}|{UNDERSCORE})*
 
-/* Entier non signé (le signe se gère avec les parenthèses dans la grammaire) */
 ENTIER          {CHIFFRE}+
 
-/* Réel non signé */
 REEL            {CHIFFRE}+\.{CHIFFRE}+
 
-/* Espaces blancs (espaces, tabulations) */
 BLANC           [ \t]+
 
 %%
 
-/* ================================================================== */
-/*  RÈGLES LEXICALES                                                   */
-/*  Ordre important : les règles les plus spécifiques d'abord          */
-/* ================================================================== */
-
-/* --- Commentaires ------------------------------------------------- */
-
-"//"[^\n]*          { ADVANCE_COL; /* ignorer commentaire ligne */    }
+"//"[^\n]*          { ADVANCE_COL;    }
 
 "/*"                {
-                        /* Commentaire multi-lignes : on avance jusqu'à */ 
-                        /* la prochaine séquence  */
                         int c, prev = 0;
                         ADVANCE_COL;
                         while ((c = input()) != EOF) {
@@ -79,8 +50,6 @@ BLANC           [ \t]+
                             fprintf(stderr, "Erreur Lexicale : commentaire non fermé\n");
                     }
 
-/* --- Mots-clés ----------------------------------------------------- */
-/* Note : ils doivent apparaître AVANT la règle IDENTIFICATEUR         */
 
 "PROGRAM"           { ADVANCE_COL; return TOK_PROGRAM;  }
 "DECL"              { ADVANCE_COL; return TOK_DECL;     }
@@ -97,13 +66,11 @@ BLANC           [ \t]+
 "WRITE"             { ADVANCE_COL; return TOK_WRITE;     }
 "READ"              { ADVANCE_COL; return TOK_READ;      }
 
-/* --- Opérateurs logiques ------------------------------------------ */
 
 "&&"                { ADVANCE_COL; return TOK_AND;  }
 "||"                { ADVANCE_COL; return TOK_OR;   }
 "!"                 { ADVANCE_COL; return TOK_NOT;  }
 
-/* --- Opérateurs de comparaison ------------------------------------ */
 
 ">="                { ADVANCE_COL; return TOK_GE;  }
 "<="                { ADVANCE_COL; return TOK_LE;  }
@@ -112,7 +79,6 @@ BLANC           [ \t]+
 ">"                 { ADVANCE_COL; return TOK_GT;  }
 "<"                 { ADVANCE_COL; return TOK_LT;  }
 
-/* --- Opérateurs arithmétiques ------------------------------------- */
 
 "+"                 { ADVANCE_COL; return '+'; }
 "-"                 { ADVANCE_COL; return '-'; }
@@ -120,7 +86,6 @@ BLANC           [ \t]+
 "/"                 { ADVANCE_COL; return '/'; }
 "="                 { ADVANCE_COL; return '='; }
 
-/* --- Délimiteurs -------------------------------------------------- */
 
 ";"                 { ADVANCE_COL; return ';'; }
 ","                 { ADVANCE_COL; return ','; }
@@ -132,7 +97,6 @@ BLANC           [ \t]+
 "["                 { ADVANCE_COL; return '['; }
 "]"                 { ADVANCE_COL; return ']'; }
 
-/* --- Constante réelle --------------------------------------------- */
 
 {REEL}              {
                         ADVANCE_COL;
@@ -140,44 +104,36 @@ BLANC           [ \t]+
                         return TOK_REEL;
                     }
 
-/* --- Constante entière -------------------------------------------- */
 
 {ENTIER}            {
                         ADVANCE_COL;
                         int v = atoi(yytext);
-                        /* Vérification de la plage INTEGER */
                         if (v < -32768 || v > 32767)
                             lex_error("constante entiere hors plage [-32768, 32767]");
                         yylval.ival = v;
                         return TOK_ENTIER;
                     }
 
-/* --- Identificateur ----------------------------------------------- */
 
 {IDENTIFICATEUR}    {
                         ADVANCE_COL;
 
-                        /* Règle : longueur maximale 8 caractères */
                         if (yyleng > 8) {
                             lex_error("identificateur trop long (max 8 caracteres)");
-                            /* On tronque silencieusement pour continuer l'analyse */
                             yytext[8] = '\0';
                         }
 
-                        /* Copier le lexème dans yylval */
                         strncpy(yylval.sval, yytext, MAX_ID_LEN);
                         yylval.sval[MAX_ID_LEN] = '\0';
 
                         return TOK_IDF;
                     }
 
-/* --- Caractères ignorés ------------------------------------------ */
 
-{BLANC}             { ADVANCE_COL; /* ignorer espaces */    }
+{BLANC}             { ADVANCE_COL;    }
 
-\n                  { line_num++; col_num = 1; /* nouvelle ligne */ }
+\n                  { line_num++; col_num = 1;  }
 
-/* --- Caractère non reconnu --------------------------------------- */
 
 .                   {
                         ADVANCE_COL;

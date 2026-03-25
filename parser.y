@@ -76,6 +76,10 @@ Symbole *verifier_declare(const char *nom, int ligne) {
 %type <tval> type_simple
 %type <temp> expression
 %type <temp> nom_programme
+%type <temp> mark_ifz
+%type <temp> partie_else_ci
+%type <temp> boucle_for
+%type <temp> boucle_while
 
 %%
 
@@ -273,7 +277,7 @@ partie_else_ci
           char *lf_info = $<temp>-2;   /* mark_ifz de la règle parente */
           char *colon = strchr(lf_info, '|');
           char *l_fin = ci_nouveau_label();
-          snprintf($$, 63, "%s", l_fin);
+          snprintf($<temp>$, 63, "%s", l_fin);
           ci_emettre(Q_GOTO, "-", "-", l_fin);
           if (colon) {
               char *l_faux = colon + 1;
@@ -316,9 +320,9 @@ boucle_for
               char *l_fin = ci_nouveau_label();
               ci_emettre(Q_IFZ, t_cond, "-", l_fin);
               /* Transporter les infos pour l'après-corps */
-              snprintf($$, 63, "%s|%s|%s|%s", l_debut, l_fin, $3, $7);
+              snprintf($<temp>$, 63, "%s|%s|%s|%s", l_debut, l_fin, $3, $7);
           } else {
-              strncpy($$, "?|?|?|?", 63);
+              strncpy($<temp>$, "?|?|?|?", 63);
           }
       }
       '{' instructions '}'
@@ -353,13 +357,13 @@ boucle_while
       {
           char *l_debut = ci_nouveau_label();
           ci_emettre(Q_LABEL, "-", "-", l_debut);
-          strncpy($$, l_debut, 63);
+          strncpy($<temp>$, l_debut, 63);
       }
       '(' expression ')'
       {
           char *l_fin = ci_nouveau_label();
           ci_emettre(Q_IFZ, $4, "-", l_fin);
-          snprintf($$, 63, "%s|%s", $<temp>2, l_fin);
+          snprintf($<temp>$, 63, "%s|%s", $<temp>2, l_fin);
       }
       '{' instructions '}'
       {
