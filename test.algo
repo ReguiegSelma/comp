@@ -1,0 +1,61 @@
+// ============================================================
+//  Programme de test complet — MiniAlgo
+//  Couvre : variables INTEGER/FLOAT, constantes, tableaux,
+//           IF/ELSE, FOR, WHILE, WRITE, READ,
+//           opérateurs arithmétiques et de comparaison
+// ============================================================
+
+PROGRAM TestComplet
+
+DECL
+    /* Variables simples */
+    INTEGER : A, B, C ;
+    FLOAT   : X ;
+
+    /* Constantes */
+    CONST MAX = 10 ;
+    CONST PI  = 3.14 ;
+
+    /* Tableau d'entiers (5 cases) */
+    INTEGER : T[5] ;
+ENDDECL
+
+BEGIN
+
+    /* ---- Affectations simples ---- */
+    A = 5 ;
+    B = 3 ;
+    C = A + B ;
+
+    /* ---- Calcul flottant ---- */
+    X = PI ;
+
+    /* ---- IF / ELSE ---- */
+    IF (A > B) {
+        WRITE(A) ;
+    }
+    ELSE {
+        WRITE(B) ;
+    }
+
+    /* ---- Boucle FOR : remplir le tableau T ---- */
+    FOR (C : 0 : 1 : 4) {
+        T[C] = C + 1 ;
+    }
+
+    /* ---- Boucle WHILE : sommer T[0..4] dans A ---- */
+    A = 0 ;
+    B = 0 ;
+    WHILE (B < 5) {
+        A = A + T[B] ;
+        B = B + 1 ;
+    }
+
+    /* ---- Affichage du résultat (devrait valoir 15) ---- */
+    WRITE(A) ;
+
+    /* ---- Lecture depuis l'entrée ---- */
+    READ(C) ;
+    WRITE(C) ;
+
+END
