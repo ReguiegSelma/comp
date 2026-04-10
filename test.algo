@@ -2,22 +2,20 @@
 //  Programme de test AVEC ERREURS — MiniAlgo
 // ============================================================
 
-PROGRAM TestComplet
+PROGRAM TestComp
 
 DECL
     /* Variables simples */
     INTEGER : A, B, C ;
     FLOAT   : X ;
-    FLOAT   : X ;   /* ❌ ERREUR : redéclaration de X */
 
     /* Constantes */
     CONST MAX = 10 ;
     CONST PI  = 3.14 ;
-    CONST MAX = 20 ; /* ❌ ERREUR : constante redéclarée */
 
     /* Tableau d'entiers (5 cases) */
     INTEGER : T[5] ;
-    INTEGER : T[10] ; /* ❌ ERREUR : redéclaration du tableau */
+    INTEGER : F[10] ;
 ENDDECL
 
 BEGIN
@@ -29,43 +27,22 @@ BEGIN
 
     /* ---- Erreurs d'affectation ---- */
     X = PI ;
-    X = A + B ;      /* ❌ ERREUR : type incompatible (int → float selon règles) */
 
     /* ---- IF / ELSE avec erreur syntaxique ---- */
-    IF (A > B)        /* ❌ ERREUR : manque "{" */
+    IF (A > B) {
         WRITE(A) ;
-    ELSE 
+    }ELSE{
         WRITE(B) ;
     }
 
     /* ---- FOR avec erreur ---- */
-    FOR (C : 0 : 1 : 4) {
+    FOR (C : 0 : 4 : 1) {
         T[C] = C + 1 ;
     }
 
-    FOR (C : 0 : 1 : 4 {   /* ❌ ERREUR : parenthèse manquante */
-        T[C] = C ;
-    }
 
-    /* ---- WHILE avec erreur logique ---- */
-    A = 0 ;
-    B = 0 ;
-    WHILE (B < 5) {
-        A = A + T[B] ;
-        B = B + 1 ;
-    }
-
-    /* ---- Accès tableau hors borne ---- */
-    WRITE(T[10]) ;  /* ❌ ERREUR : index hors limites */
-
-    /* ---- Variable non déclarée ---- */
-    D = 5 ;  /* ❌ ERREUR : D non déclarée */
-
-    /* ---- Lecture et écriture ---- */
     READ(C) ;
     WRITE(C) ;
-
-    /* ---- Instruction invalide ---- */
-    PRINT(A) ;  /* ❌ ERREUR : instruction inconnue */
+    WRITE(A) ;
 
 END

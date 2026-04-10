@@ -24,6 +24,7 @@ PI           dd  3.14         ; CONST FLOAT
 A            dw  0          ; INTEGER
 B            dw  0          ; INTEGER
 C            dw  0          ; INTEGER
+F            times 10 dw 0    ; INTEGER[10]
 T            times 5 dw 0    ; INTEGER[5]
 
     ; Temporaires générés par le compilateur
@@ -32,10 +33,6 @@ T1           dw  0          ; temporaire
 T2           dw  0          ; temporaire
 T3           dw  0          ; temporaire
 T            dw  0          ; temporaire
-T4           dw  0          ; temporaire
-T5           dw  0          ; temporaire
-T6           dw  0          ; temporaire
-T7           dw  0          ; temporaire
 
     ; Buffers entrée/sortie
 _obuf        times 24 db '$' ; tampon affichage (sortie)
@@ -205,9 +202,9 @@ L1:
     ; (12) LABEL   -          -          L2        
 L2:
 
-    ; (13) LE      C          4          T2        
+    ; (13) LE      C          1          T2        
     mov  ax, word [C]
-    mov  bx, 4
+    mov  bx, 1
     cmp  ax, bx
     jle  .cmp_t_T2_13
     mov  word [T2], 0
@@ -234,77 +231,19 @@ L2:
     mov  ax, word [T3]
     mov  word [T + si], ax
 
-    ; (17) ASGN    0          -          A         
-    mov  word [A], 0
-
-    ; (18) ASGN    0          -          B         
-    mov  word [B], 0
-
-    ; (19) LABEL   -          -          L4        
-L4:
-
-    ; (20) LT      B          5          T4        
-    mov  ax, word [B]
-    mov  bx, 5
-    cmp  ax, bx
-    jl  .cmp_t_T4_20
-    mov  word [T4], 0
-    jmp  .cmp_e_T4_20
-.cmp_t_T4_20:
-    mov  word [T4], 1
-.cmp_e_T4_20:
-
-    ; (21) IFZ     T4         -          L5        
-    mov  ax, word [T4]
-    test ax, ax
-    jz   L5
-
-    ; (22) TLOAD   T          B          T5        
-    mov  ax, word [B]
-    mov  si, ax
-    shl  si, 1         ; index * 2 (INTEGER = DW)
-    mov  ax, word [T + si]
-    mov  word [T5], ax
-
-    ; (23) ADD     A          T5         T6        
-    mov  ax, word [A]
-    mov  bx, word [T5]
-    add  ax, bx
-    mov  word [T6], ax
-
-    ; (24) ASGN    T6         -          A         
-    mov  ax, word [T6]
-    mov  word [A], ax
-
-    ; (25) ADD     B          1          T7        
-    mov  ax, word [B]
-    mov  bx, 1
-    add  ax, bx
-    mov  word [T7], ax
-
-    ; (26) ASGN    T7         -          B         
-    mov  ax, word [T7]
-    mov  word [B], ax
-
-    ; (27) GOTO    -          -          L4        
-    jmp  L4
-
-    ; (28) LABEL   -          -          L5        
-L5:
-
-    ; (29) WRITE   A          -          -         
-    mov  ax, word [A]
-    call _write_int
-
-    ; (30) READ    -          -          C         
+    ; (17) READ    -          -          C         
     call _read_int       ; résultat dans AX
     mov  word [C], ax
 
-    ; (31) WRITE   C          -          -         
+    ; (18) WRITE   C          -          -         
     mov  ax, word [C]
     call _write_int
 
-    ; (32) HALT    -          -          -         
+    ; (19) WRITE   A          -          -         
+    mov  ax, word [A]
+    call _write_int
+
+    ; (20) HALT    -          -          -         
     ; Fin du programme
     mov  ah, 4Ch
     mov  al, 0
