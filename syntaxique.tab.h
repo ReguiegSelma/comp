@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_PARSER_TAB_H_INCLUDED
-# define YY_YY_PARSER_TAB_H_INCLUDED
+#ifndef YY_YY_SYNTAXIQUE_TAB_H_INCLUDED
+# define YY_YY_SYNTAXIQUE_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -54,33 +54,40 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    TOK_PROGRAM = 258,             /* TOK_PROGRAM  */
-    TOK_DECL = 259,                /* TOK_DECL  */
-    TOK_ENDDECL = 260,             /* TOK_ENDDECL  */
-    TOK_BEGIN = 261,               /* TOK_BEGIN  */
-    TOK_END = 262,                 /* TOK_END  */
-    TOK_INTEGER = 263,             /* TOK_INTEGER  */
-    TOK_FLOAT = 264,               /* TOK_FLOAT  */
-    TOK_CONST = 265,               /* TOK_CONST  */
-    TOK_IF = 266,                  /* TOK_IF  */
-    TOK_ELSE = 267,                /* TOK_ELSE  */
-    TOK_FOR = 268,                 /* TOK_FOR  */
-    TOK_WHILE = 269,               /* TOK_WHILE  */
-    TOK_WRITE = 270,               /* TOK_WRITE  */
-    TOK_READ = 271,                /* TOK_READ  */
-    TOK_GE = 272,                  /* TOK_GE  */
-    TOK_LE = 273,                  /* TOK_LE  */
-    TOK_EQ = 274,                  /* TOK_EQ  */
-    TOK_NE = 275,                  /* TOK_NE  */
-    TOK_GT = 276,                  /* TOK_GT  */
-    TOK_LT = 277,                  /* TOK_LT  */
-    TOK_AND = 278,                 /* TOK_AND  */
-    TOK_OR = 279,                  /* TOK_OR  */
-    TOK_NOT = 280,                 /* TOK_NOT  */
-    TOK_ENTIER = 281,              /* TOK_ENTIER  */
-    TOK_REEL = 282,                /* TOK_REEL  */
-    TOK_IDF = 283,                 /* TOK_IDF  */
-    UMINUS = 284                   /* UMINUS  */
+    IDF = 258,                     /* IDF  */
+    INT_VAL = 259,                 /* INT_VAL  */
+    FLOAT_VAL = 260,               /* FLOAT_VAL  */
+    PROGRAM = 261,                 /* PROGRAM  */
+    DECL = 262,                    /* DECL  */
+    ENDDECL = 263,                 /* ENDDECL  */
+    BEGIN_P = 264,                 /* BEGIN_P  */
+    END = 265,                     /* END  */
+    INTEGER = 266,                 /* INTEGER  */
+    FLOAT = 267,                   /* FLOAT  */
+    CONST = 268,                   /* CONST  */
+    IF = 269,                      /* IF  */
+    ELSE = 270,                    /* ELSE  */
+    FOR = 271,                     /* FOR  */
+    WHILE = 272,                   /* WHILE  */
+    WRITE = 273,                   /* WRITE  */
+    PLUS = 274,                    /* PLUS  */
+    MOINS = 275,                   /* MOINS  */
+    MULT = 276,                    /* MULT  */
+    DIV = 277,                     /* DIV  */
+    AFFECT = 278,                  /* AFFECT  */
+    SUP = 279,                     /* SUP  */
+    INF = 280,                     /* INF  */
+    EGAL = 281,                    /* EGAL  */
+    PV = 282,                      /* PV  */
+    DEUXPTS = 283,                 /* DEUXPTS  */
+    VIRG = 284,                    /* VIRG  */
+    PARG = 285,                    /* PARG  */
+    PARD = 286,                    /* PARD  */
+    ACCOLG = 287,                  /* ACCOLG  */
+    ACCOLD = 288,                  /* ACCOLD  */
+    CROCHG = 289,                  /* CROCHG  */
+    CROCHD = 290,                  /* CROCHD  */
+    LOWER_THAN_ELSE = 291          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -89,15 +96,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 48 "parser.y"
+#line 30 "syntaxique.y"
+ 
+    char* str;
+    int inter; // Pour stocker les positions des quads
 
-    int        ival;
-    float      rval;
-    char       sval[9];
-    TypeDonnee tval;
-    char       temp[64];
-
-#line 101 "parser.tab.h"
+#line 105 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -112,4 +116,4 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
-#endif /* !YY_YY_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_YY_SYNTAXIQUE_TAB_H_INCLUDED  */

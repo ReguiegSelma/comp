@@ -1,0 +1,97 @@
+PROGRAM projet
+
+DECL
+
+INTEGER: B, T[10];//hello
+
+INTEGER: A;
+
+INTEGER: I, J, RES, F[10];
+
+FLOAT: X, K;
+
+CONST VAL_1 = 100;
+
+CONST VL_ = 100;
+
+FLOAT: variable_tres_longue;
+
+CONST MAX = 100;
+
+ENDDECL
+
+BEGIN
+
+A = 32777;
+
+A = (+10);
+
+I = (+0);
+
+RES = (+0);
+
+A = (-2.7);
+
+T[0] = (-5);
+
+
+
+B = A + T[0];
+
+B = 5 / 0;
+
+X = (A * 2) + 7;
+
+X = 3.14;
+
+
+
+WHILE (I < MAX) {
+
+    F[I] = I * (+2);
+
+
+
+    IF (I > (+5)) {
+
+        RES = RES + F[I];
+
+    }
+
+    ELSE {
+
+        RES = RES + (+1);
+
+    }
+
+
+
+    I = I + (+1);
+
+}
+
+
+
+IF (B > A) {
+
+    A = VAL;
+
+}
+
+ELSE {
+
+    A = VAL_1;
+
+}
+
+
+
+FOR (J : 1 : 5 : 1) {
+
+    K = 3.14 * J;
+
+    F[0] = K;
+
+}
+
+END
