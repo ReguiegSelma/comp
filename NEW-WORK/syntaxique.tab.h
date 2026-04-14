@@ -54,21 +54,22 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    kw_program = 258,              /* kw_program  */
-    kw_decl = 259,                 /* kw_decl  */
-    kw_enddecl = 260,              /* kw_enddecl  */
-    kw_begin = 261,                /* kw_begin  */
-    kw_end = 262,                  /* kw_end  */
-    kw_integer = 263,              /* kw_integer  */
-    kw_float = 264,                /* kw_float  */
-    kw_const = 265,                /* kw_const  */
-    kw_if = 266,                   /* kw_if  */
-    kw_for = 267,                  /* kw_for  */
-    kw_while = 268,                /* kw_while  */
-    idf = 269,                     /* idf  */
-    cst_int = 270,                 /* cst_int  */
-    cst_float = 271,               /* cst_float  */
-    comp_egal = 272                /* comp_egal  */
+    idf = 258,                     /* idf  */
+    cst_int = 259,                 /* cst_int  */
+    cst_float = 260,               /* cst_float  */
+    kw_program = 261,              /* kw_program  */
+    kw_decl = 262,                 /* kw_decl  */
+    kw_enddecl = 263,              /* kw_enddecl  */
+    kw_begin = 264,                /* kw_begin  */
+    kw_end = 265,                  /* kw_end  */
+    kw_integer = 266,              /* kw_integer  */
+    kw_float = 267,                /* kw_float  */
+    kw_const = 268,                /* kw_const  */
+    kw_if = 269,                   /* kw_if  */
+    kw_else = 270,                 /* kw_else  */
+    kw_for = 271,                  /* kw_for  */
+    kw_while = 272,                /* kw_while  */
+    comp_egal = 273                /* comp_egal  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -77,13 +78,17 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 22 "syntaxique.y"
+#line 34 "syntaxique.y"
 
     int entier;
     float reel;
     char* str;
+    struct {
+       char* nom;
+       char* type;
+    } exp;
 
-#line 87 "syntaxique.tab.h"
+#line 92 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
