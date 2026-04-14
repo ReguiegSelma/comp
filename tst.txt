@@ -1,0 +1,43 @@
+PROGRAM PerfTest
+
+DECL
+    INTEGER: i, j, k, resultat;
+    INTEGER: tab[100];
+    FLOAT: calcul_c, seuil;
+    CONST MAX = 500;
+    CONST MIN = (-100);
+ENDDECL
+
+BEGIN
+    i = 0;
+    resultat = 0;
+    seuil = 15.5;
+
+    // Test d'imbrication profonde (3 niveaux)
+    WHILE (i < 10) {
+        j = 0;
+        WHILE (j < 10) {
+            k = 0;
+            FOR (k : 0 : 5 : 1) {
+                tab[i] = (i * j) + k;
+                resultat = resultat + tab[i];
+            }
+            j = j + 1;
+        }
+        
+        // Test de conditions et expressions complexes
+        IF (resultat > MAX) {
+            calcul_c = (seuil * 2.5) / (i + 1.0);
+            WRITE(resultat);
+        } ELSE {
+            calcul_c = seuil + (MIN * 1.0);
+        }
+        
+        i = i + 1;
+    }
+
+    // Test de calcul avec priorité et constantes signées
+    resultat = ((MAX + MIN) * 2) / (5 - 3);
+    
+    WRITE(resultat);
+END

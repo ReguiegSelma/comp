@@ -1,21 +1,23 @@
 PROGRAM Test
 DECL
-INTEGER : A, B, I ;
-FLOAT : X ;
+INTEGER : A, B, I, T[2], X ;
+FLOAT : Z ;
 CONST MAX = 10 ;
 ENDDECL
 BEGIN
 A = 5 ;
 B = 3 ;
-X = 2.5 ;
+I=0 ;
+X = 2 ;
+
+B=10 / 2 ;
 IF (A > B) {
 A = A + B ;
 }
-ELSE {
-B = B + 1 ;
+ELSE { 
+FOR (I : 1 : 3 : 1) {
+T[1]=I;
 }
-FOR (I : 0 : 1 : 5) {
-A = A + I ;
 }
 WHILE (A < MAX) {
 A = A + 1 ;

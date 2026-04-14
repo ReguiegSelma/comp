@@ -87,7 +87,10 @@ extern int yydebug;
     ACCOLD = 288,                  /* ACCOLD  */
     CROCHG = 289,                  /* CROCHG  */
     CROCHD = 290,                  /* CROCHD  */
-    LOWER_THAN_ELSE = 291          /* LOWER_THAN_ELSE  */
+    AND = 291,                     /* AND  */
+    OR = 292,                      /* OR  */
+    NOT = 293,                     /* NOT  */
+    LOWER_THAN_ELSE = 294          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -96,12 +99,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 30 "syntaxique.y"
+#line 68 "syntaxique.y"
  
     char* str;
-    int inter; // Pour stocker les positions des quads
+    int inter; 
 
-#line 105 "syntaxique.tab.h"
+#line 108 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

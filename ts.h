@@ -1,18 +1,25 @@
 #ifndef TS_H
 #define TS_H
 
-typedef struct {
+typedef struct Symbole {
     char name[20];
     char type[20];
-    int estConstante; // 1 si c'est une CONST, 0 sinon
-    int estTableau;   // 1 si c'est un tableau, 0 sinon
-    int taille;       // Taille du tableau
+    int estConstante;
+    int estTableau;
+    int taille;
+    float valeur;
+    int a_une_valeur;
+    struct Symbole* next;
 } Symbole;
 
-extern Symbole table[1000]; // La table des symboles
+void inserer(const char* name, const char* type, int isConst, int isTab, int size);
+Symbole* rechercher(const char* name);
 
-void inserer(char* name, char* type, int isConst, int isTab, int size);
-int rechercher(char* name);
-void afficher_ts();
+void inserer_kw(const char* lexeme);
+void inserer_sep(const char* lexeme);
+
+void afficher_ts_ids();
+void afficher_ts_kw();
+void afficher_ts_sep();
 
 #endif
