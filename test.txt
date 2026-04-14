@@ -1,5 +1,4 @@
 PROGRAM projet
-
 DECL
 
 INTEGER: B, T[10];//hello

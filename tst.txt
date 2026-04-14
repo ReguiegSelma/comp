@@ -24,7 +24,10 @@ BEGIN
             }
             j = j + 1;
         }
-        
+        /*zertyuik
+
+        hj
+        */
         // Test de conditions et expressions complexes
         IF (resultat > MAX) {
             calcul_c = (seuil * 2.5) / (i + 1.0);

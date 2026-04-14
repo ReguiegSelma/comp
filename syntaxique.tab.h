@@ -78,19 +78,21 @@ extern int yydebug;
     SUP = 279,                     /* SUP  */
     INF = 280,                     /* INF  */
     EGAL = 281,                    /* EGAL  */
-    PV = 282,                      /* PV  */
-    DEUXPTS = 283,                 /* DEUXPTS  */
-    VIRG = 284,                    /* VIRG  */
-    PARG = 285,                    /* PARG  */
-    PARD = 286,                    /* PARD  */
-    ACCOLG = 287,                  /* ACCOLG  */
-    ACCOLD = 288,                  /* ACCOLD  */
-    CROCHG = 289,                  /* CROCHG  */
-    CROCHD = 290,                  /* CROCHD  */
-    AND = 291,                     /* AND  */
-    OR = 292,                      /* OR  */
-    NOT = 293,                     /* NOT  */
-    LOWER_THAN_ELSE = 294          /* LOWER_THAN_ELSE  */
+    SUPEG = 282,                   /* SUPEG  */
+    INFEG = 283,                   /* INFEG  */
+    PV = 284,                      /* PV  */
+    DEUXPTS = 285,                 /* DEUXPTS  */
+    VIRG = 286,                    /* VIRG  */
+    PARG = 287,                    /* PARG  */
+    PARD = 288,                    /* PARD  */
+    ACCOLG = 289,                  /* ACCOLG  */
+    ACCOLD = 290,                  /* ACCOLD  */
+    CROCHG = 291,                  /* CROCHG  */
+    CROCHD = 292,                  /* CROCHD  */
+    AND = 293,                     /* AND  */
+    OR = 294,                      /* OR  */
+    NOT = 295,                     /* NOT  */
+    LOWER_THAN_ELSE = 296          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -99,12 +101,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 68 "syntaxique.y"
+#line 69 "syntaxique.y"
  
     char* str;
-    int inter; 
+    int ent; 
+    float flt;
 
-#line 108 "syntaxique.tab.h"
+#line 111 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

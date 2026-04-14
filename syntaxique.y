@@ -58,6 +58,7 @@ extern int nb_lignes;
 extern int nb_col;
 extern char* yytext;
 extern FILE *yyin; 
+extern int nb_erreurs;
 
 int nb_erreurs = 0;
 int yylex();
@@ -67,12 +68,13 @@ char type_svg[20];
 
 %union { 
     char* str;
-    int inter; 
+    int ent; 
+    float flt;
 }
 
 %token <str> IDF INT_VAL FLOAT_VAL
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
-%token PLUS MOINS MULT DIV AFFECT SUP INF EGAL PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
+%token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
 %type <str> expression terme facteur EXPR_LOG
 
