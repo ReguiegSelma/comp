@@ -1,0 +1,24 @@
+PROGRAM Test
+DECL
+INTEGER : A, B,Y,I,C, T[4] ;
+FLOAT : X ;
+FLOAT: X;
+CONST MAX = 10;
+ENDDECL
+BEGIN
+C = 5 ;
+MAX[2]=3;
+Y=6;
+A = 10 / 2 ;
+X = A + 2.5 ;
+B = Y + 1 ;
+IF (A > B) {
+    A = A + 1;
+}
+FOR (I : 0 : 1 : 10) {
+    A = A + I;
+}
+WHILE (A < 10) {
+A = A + 1;
+}
+END
