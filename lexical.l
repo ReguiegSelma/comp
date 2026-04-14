@@ -43,7 +43,7 @@ ENTIER [0-9]+
                         }
 {ENTIER} { 
     long val = atol(yytext);
-    if (val > 32767) {
+    if (val > 32767 || val < -32768) {
         printf("Erreur Lexicale: ligne %d, col %d, Valeur INTEGER hors limite (%s)\n",nb_lignes, nb_col, yytext);
         nb_erreurs++;
     }

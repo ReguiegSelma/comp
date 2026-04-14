@@ -1,11 +1,13 @@
 PROGRAM Test
 DECL
-INTEGER : A, B,Y,I,C ;
+INTEGER : A, B,Y,I,C, T[4] ;
 FLOAT : X ;
 CONST MAX = 10;
 ENDDECL
 BEGIN
 C = 5 ;
+MAX[2]=3;
+Y=6;
 A = 10 / 2 ;
 X = A + 2.5 ;
 B = Y + 1 ;

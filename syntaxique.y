@@ -12,7 +12,7 @@ int contient_point_decimal(char* str) {
     return 0;
 }
 
-// Fonction pour vérifier si une chaîne est un entier pur
+// Fonction pour vérifier si une chaîne est un entier non signe
 int est_un_entier(char* s) {
     if (s == NULL || *s == '\0' || strcmp(s, "ID_ERR") == 0) return 0;
     for (int i = 0; s[i] != '\0'; i++) {
@@ -75,6 +75,7 @@ char type_svg[20];
 %token PLUS MOINS MULT DIV AFFECT SUP INF EGAL PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
 %type <str> expression terme facteur EXPR_LOG
+
 %left PLUS MOINS
 %left MULT DIV
 %left OR
@@ -154,8 +155,18 @@ AFF: IDF AFFECT expression PV {
         }
         if (ok) {
             // Mémorisation de la valeur pour la propagation de constante
-            if (est_un_entier($3)) { s->valeur = atof($3); }
-            s->a_une_valeur = 1;
+            if (est_un_entier($3)) {
+                s->valeur = atof($3);
+                s->a_une_valeur = 1;
+            } else {
+                Symbole* rhs = rechercher($3);
+                if (rhs != NULL && rhs->a_une_valeur) {
+                    s->valeur = rhs->valeur;
+                    s->a_une_valeur = 1;
+                } else {
+                    s->a_une_valeur = 0; // valeur inconnue
+                }
+            }
             quad("=", $3, "", $1); 
         }
     } else {
@@ -202,7 +213,18 @@ AFF: IDF AFFECT expression PV {
             } else {
                 char res[30]; sprintf(res, "%s[%s]", $1, $3);
                 quad("=", $6, "", res); 
-                s->a_une_valeur = 1;
+                if (est_un_entier($6)) {
+                    s->valeur = atof($6);
+                    s->a_une_valeur = 1;
+                } else {
+                    Symbole* rhs = rechercher($6);
+                    if (rhs != NULL && rhs->a_une_valeur) {
+                        s->valeur = rhs->valeur;
+                        s->a_une_valeur = 1;
+                    } else {
+                        s->a_une_valeur = 0;
+                    }
+                }
             }
         }
     }
@@ -303,6 +325,10 @@ facteur: IDF {
        | PARG PLUS FLOAT_VAL PARD { char* temp = malloc(30); sprintf(temp, "+%s", $3); $$ = temp; }
        ;
 
+
+
+
+
 COND: IF PARG EXPR_LOG PARD 
       { 
         fin_if = prochain_quad(); 
@@ -378,16 +404,27 @@ EXPR_LOG: EXPR_LOG OR EXPR_LOG { $$ = new_temp(); quad("OR", $1, $3, $$); }
         | PARG EXPR_LOG PARD { $$ = $2; }
         ;
 
+
+
 WRITE_I: WRITE PARG IDF PARD PV { 
     if(rechercher($3) == NULL) {printf("Erreur Semantique: ligne %d, variable '%s' non declaree\n",nb_lignes, $3);nb_erreurs++;}
 }
 
+
+
+
 %%
-void yyerror(const char* s) { printf("Erreur Syntaxique: ligne %d, col %d, pres de '%s'\n", nb_lignes, nb_col, yytext);nb_erreurs++; }
+void yyerror(const char* s) { 
+    printf("Erreur Syntaxique: ligne %d, col %d, pres de '%s'\n", nb_lignes, nb_col, yytext);nb_erreurs++; 
+    }
 int main(int argc, char *argv[]) {
     if (argc > 1) {
         FILE *f = fopen(argv[1], "r");
-        if (f) yyin = f;
+        if (f){ yyin = f;}
+        else {
+            printf("Can't open!\n");
+            exit(1);
+        }
     }
     yyparse();
     afficher_ts_ids();
