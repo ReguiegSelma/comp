@@ -2,10 +2,10 @@
 #define QUAD_H
 
 typedef struct {
-    char op[15];
-    char arg1[15];
-    char arg2[15];
-    char res[15];
+    char op[10];
+    char arg1[10];
+    char arg2[10];
+    char res[10];
 } qdr;
 
 extern qdr quad[1000];

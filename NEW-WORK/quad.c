@@ -20,7 +20,7 @@ void update_quad(int num_quad, int col_quad, char val[]) {
 }
 
 void afficher_quads() {
-    printf("\n/******** Liste des Quadruplets *********/\n");
+    printf("\n/ Liste des Quadruplets /\n");
     for (int i = 0; i < qc; i++) {
         printf("%d - (%s, %s, %s, %s)\n", i, quad[i].op, quad[i].arg1, quad[i].arg2, quad[i].res);
     }

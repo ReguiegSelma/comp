@@ -19,7 +19,7 @@ char* new_temp() {
     return t;
 }
 
-int fin_if, deb_while, cond_while;
+int fin_if, deb_while, cond_while, deb_else;
 %}
 
 %union {
@@ -74,6 +74,7 @@ AFF: idf aff EXPR sc {
     else if (strcmp(tab[p].code, "CONST") == 0) printf("Erreur Semantique: Modif constante ligne %d\n", nb_line);
     else quadr("=", $3, "", $1);
 }
+
 | idf crochg cst_int crochd aff EXPR sc {
     int p = rechercher($1);
     if (p != -1 && ($3 >= tab[p].taille || $3 < 0)) printf("Erreur Semantique: Index hors limites ligne %d\n", nb_line);
@@ -121,6 +122,14 @@ BOUCLE: kw_while { deb_while = qc; }
 void yyerror(char* msg) { printf("Erreur Syntaxique: ligne %d, col %d\n", nb_line, col); }
 
 int main() {
+        if (argc > 1) {
+        FILE *f = fopen(argv[1], "r");
+        if (f){ yyin = f;}
+        else {
+            printf("Can't open!\n");
+            exit(1);
+        }
+    }
     yyparse();
     afficher_ts();
     afficher_quads();
