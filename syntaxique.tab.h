@@ -54,36 +54,47 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    kw_program = 258,              /* kw_program  */
-    kw_decl = 259,                 /* kw_decl  */
-    kw_enddecl = 260,              /* kw_enddecl  */
-    kw_begin = 261,                /* kw_begin  */
-    kw_end = 262,                  /* kw_end  */
-    kw_integer = 263,              /* kw_integer  */
-    kw_float = 264,                /* kw_float  */
-    kw_const = 265,                /* kw_const  */
-    kw_if = 266,                   /* kw_if  */
-    kw_else = 267,                 /* kw_else  */
-    kw_while = 268,                /* kw_while  */
-    idf = 269,                     /* idf  */
-    cst_int = 270,                 /* cst_int  */
-    cst_float = 271,               /* cst_float  */
-    plus = 272,                    /* plus  */
-    moins = 273,                   /* moins  */
-    mult = 274,                    /* mult  */
-    divi = 275,                    /* divi  */
-    aff = 276,                     /* aff  */
-    sup = 277,                     /* sup  */
-    inf = 278,                     /* inf  */
-    sc = 279,                      /* sc  */
-    dp = 280,                      /* dp  */
-    vg = 281,                      /* vg  */
-    po = 282,                      /* po  */
-    pf = 283,                      /* pf  */
-    crochg = 284,                  /* crochg  */
-    crochd = 285,                  /* crochd  */
-    accol_g = 286,                 /* accol_g  */
-    accol_d = 287                  /* accol_d  */
+    IDF = 258,                     /* IDF  */
+    INT_VAL = 259,                 /* INT_VAL  */
+    FLOAT_VAL = 260,               /* FLOAT_VAL  */
+    ENT_SIGNE = 261,               /* ENT_SIGNE  */
+    REEL_SIGNE = 262,              /* REEL_SIGNE  */
+    PROGRAM = 263,                 /* PROGRAM  */
+    DECL = 264,                    /* DECL  */
+    ENDDECL = 265,                 /* ENDDECL  */
+    BEGIN_P = 266,                 /* BEGIN_P  */
+    END = 267,                     /* END  */
+    INTEGER = 268,                 /* INTEGER  */
+    FLOAT = 269,                   /* FLOAT  */
+    CONST = 270,                   /* CONST  */
+    IF = 271,                      /* IF  */
+    ELSE = 272,                    /* ELSE  */
+    FOR = 273,                     /* FOR  */
+    WHILE = 274,                   /* WHILE  */
+    WRITE = 275,                   /* WRITE  */
+    PLUS = 276,                    /* PLUS  */
+    MOINS = 277,                   /* MOINS  */
+    MULT = 278,                    /* MULT  */
+    DIV = 279,                     /* DIV  */
+    AFFECT = 280,                  /* AFFECT  */
+    SUP = 281,                     /* SUP  */
+    INF = 282,                     /* INF  */
+    EGAL = 283,                    /* EGAL  */
+    SUPEG = 284,                   /* SUPEG  */
+    INFEG = 285,                   /* INFEG  */
+    PV = 286,                      /* PV  */
+    DEUXPTS = 287,                 /* DEUXPTS  */
+    VIRG = 288,                    /* VIRG  */
+    PARG = 289,                    /* PARG  */
+    PARD = 290,                    /* PARD  */
+    ACCOLG = 291,                  /* ACCOLG  */
+    ACCOLD = 292,                  /* ACCOLD  */
+    CROCHG = 293,                  /* CROCHG  */
+    CROCHD = 294,                  /* CROCHD  */
+    AND = 295,                     /* AND  */
+    OR = 296,                      /* OR  */
+    NOT = 297,                     /* NOT  */
+    LOWER_THAN_ELSE = 298          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -92,13 +103,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "syntaxique.y"
+#line 21 "syntaxique.y"
 
     int entier;
     float reel;
     char* str;
 
-#line 102 "syntaxique.tab.h"
+#line 113 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

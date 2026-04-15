@@ -11,118 +11,127 @@ int yylex();
 void yyerror(char* msg);
 
 char save_type[20];
-int cpt_t = 1;
-int div_zero_flag = 0; 
+int temp_cpt = 1;
 
-char* cree_temp() {
+char* new_temp() {
     char* t = malloc(15);
-    sprintf(t, "T%d", cpt_t++);
+    sprintf(t, "T%d", temp_cpt++);
     return t;
 }
 
-void verif_type(char* idf_dest, char* type_expr) {
-    if (div_zero_flag) return; 
-    int p = rechercher(idf_dest);
-    if(p != -1) {
-        if(strcmp(tab[p].type, "INTEGER") == 0 && strcmp(type_expr, "FLOAT") == 0) {
-            printf("Erreur Semantique: ligne %d, Incompatibilite de type sur %s\n", nb_line, idf_dest);
-        }
-    }
-}
+int fin_if, deb_while, cond_while, deb_else;
 %}
 
 %union {
     int entier;
     float reel;
     char* str;
-    struct {
-       char* nom;
-       char* type;
-    } exp;
 }
 
+%token kw_program kw_decl kw_enddecl kw_begin kw_end kw_integer kw_float kw_const kw_if kw_else kw_while
 %token <str>idf <entier>cst_int <reel>cst_float
-%token kw_program kw_decl kw_enddecl kw_begin kw_end kw_integer kw_float kw_const kw_if kw_else kw_for kw_while comp_egal
-%type <exp> EXPR
-%type <entier> INDEX
+%token plus moins mult divi aff sup inf sc dp vg po pf crochg crochd accol_g accol_d
 
-%left '+' '-'
-%left '*' '/'
+%type <str> EXPR
+
+%left plus moins
+%left mult divi
 
 %%
-S: kw_program idf kw_decl LIST_DEC kw_enddecl kw_begin LIST_INST kw_end ;
+S: kw_program idf kw_decl LIST_DEC kw_enddecl kw_begin LIST_INST kw_end 
+   { printf("Compilation terminee.\n"); YYACCEPT; }
 
 LIST_DEC: DEC LIST_DEC | ;
-DEC: TYPE ':' LIST_IDF ';' | kw_const idf '=' cst_int ';' { inserer($2, "CONST", "INTEGER", (float)$4, 0); } ;
+DEC: TYPE dp LIST_OBJETS sc ;
+TYPE: kw_integer { strcpy(save_type, "INTEGER"); }
+    | kw_float { strcpy(save_type, "FLOAT"); }
+    ;
 
-TYPE: kw_integer { strcpy(save_type, "INTEGER"); } | kw_float { strcpy(save_type, "FLOAT"); } ;
+LIST_OBJETS: OBJET vg LIST_OBJETS | OBJET ;
+OBJET: idf { 
+        if (rechercher($1) != -1) printf("Erreur Semantique: Double declaration de %s ligne %d\n", $1, nb_line);
+        else inserer($1, "IDF", save_type, 0, 0); 
+     }
+     | idf crochg cst_int crochd { 
+        if ($3 <= 0) printf("Erreur Semantique: Taille tableau invalide ligne %d\n", nb_line);
+        else if (rechercher($1) != -1) printf("Erreur Semantique: Double declaration ligne %d\n", nb_line);
+        else inserer($1, "TAB", save_type, 0, $3);
+     }
+     | kw_const idf aff VAL_CST { 
+        if (rechercher($2) != -1) printf("Erreur Semantique: Double declaration ligne %d\n", nb_line);
+        else inserer($2, "CONST", save_type, 0, 0); 
+     }
+     ;
 
-LIST_IDF: OBJET ',' LIST_IDF | OBJET ;
-OBJET: idf { inserer($1, "IDF", save_type, 0, 0); } 
-     | idf '[' cst_int ']' { inserer($1, "TAB", save_type, 0, $3); } ;
+VAL_CST: cst_int | cst_float ;
 
 LIST_INST: INST LIST_INST | ;
-INST: AFF | COND | BOUCLE_FOR | BOUCLE_WHILE | error ';' ;
+INST: AFF | COND | BOUCLE ;
 
-AFF: idf '=' EXPR ';' {
-        div_zero_flag = 0; 
-        int p = rechercher($1);
-        if(p == -1) printf("Erreur Semantique: ligne %d, %s non declaree\n", nb_line, $1);
-        else {
-            if(strcmp(tab[p].code, "CONST") == 0) printf("Erreur Semantique: ligne %d, %s est une CONSTANTE\n", nb_line, $1);
-            else {
-                verif_type($1, $3.type);
-                tab[p].val = atof($3.nom);
-                quadr("=", $3.nom, "", $1);
-            }
-        }
-     }
-     /* CORRECTION ICI : Utilisation de INDEX au lieu de cst_int */
-     | idf '[' INDEX ']' '=' EXPR ';' {
-        int p = rechercher($1);
-        if(p != -1) {
-            if(strcmp(tab[p].code, "TAB") != 0) {
-                printf("Erreur Semantique: ligne %d, %s n'est pas un tableau\n", nb_line, $1);
-            } else {
-                if($3 < 0) printf("Erreur Semantique: ligne %d, Indice negatif (%d) interdit pour %s\n", nb_line, $3, $1);
-                else if($3 >= tab[p].taille) printf("Erreur Semantique: ligne %d, Depassement des bornes sur %s\n", nb_line, $1);
-                
-                verif_type($1, $6.type);
-                char dest[30]; sprintf(dest, "%s[%d]", $1, $3);
-                quadr("=", $6.nom, "", dest);
-            }
-        }
-     }
-;
+AFF: idf aff EXPR sc {
+    int p = rechercher($1);
+    if (p == -1) printf("Erreur Semantique: %s non declare ligne %d\n", $1, nb_line);
+    else if (strcmp(tab[p].code, "CONST") == 0) printf("Erreur Semantique: Modif constante ligne %d\n", nb_line);
+    else quadr("=", $3, "", $1);
+}
 
-INDEX: cst_int { $$ = $1; } | '-' cst_int { $$ = -$2; } ;
+| idf crochg cst_int crochd aff EXPR sc {
+    int p = rechercher($1);
+    if (p != -1 && ($3 >= tab[p].taille || $3 < 0)) printf("Erreur Semantique: Index hors limites ligne %d\n", nb_line);
+    char res[20]; sprintf(res, "%s[%d]", $1, $3);
+    quadr("=", $6, "", res);
+}
 
-EXPR: EXPR '+' EXPR { 
-        $$.nom = cree_temp(); 
-        $$.type = (strcmp($1.type, "FLOAT") == 0 || strcmp($3.type, "FLOAT") == 0) ? "FLOAT" : "INTEGER";
-        quadr("+", $1.nom, $3.nom, $$.nom); 
-    }
-    | EXPR '/' EXPR { 
-        if(strcmp($3.nom, "0") == 0) { printf("Erreur Semantique: ligne %d, Division par zero\n", nb_line); div_zero_flag = 1; }
-        int p = rechercher($3.nom);
-        if(p != -1 && tab[p].val == 0) { printf("Erreur Semantique: ligne %d, Division par zero (variable %s nulle)\n", nb_line, $3.nom); div_zero_flag = 1; }
-        $$.nom = cree_temp(); $$.type = "FLOAT"; 
-        quadr("/", $1.nom, $3.nom, $$.nom); 
+EXPR: EXPR plus EXPR  { $$ = new_temp(); quadr("+", $1, $3, $$); }
+    | EXPR mult EXPR  { $$ = new_temp(); quadr("*", $1, $3, $$); }
+    | EXPR divi EXPR  { 
+        if (strcmp($3, "0") == 0 || strcmp($3, "0.0") == 0) printf("Erreur Semantique: Division par zero ligne %d\n", nb_line);
+        $$ = new_temp(); quadr("/", $1, $3, $$); 
     }
     | idf { 
-        int p = rechercher($1);
-        if(p == -1) { printf("Erreur Semantique: ligne %d, %s non declaree\n", nb_line, $1); $$.type = "UNKNOWN"; }
-        else $$.type = tab[p].type;
-        $$.nom = $1; 
+        if (rechercher($1) == -1) printf("Erreur Semantique: %s non declare ligne %d\n", $1, nb_line);
+        $$ = $1; 
     }
-    | cst_int { char s[12]; sprintf(s, "%d", $1); $$.nom = strdup(s); $$.type = "INTEGER"; }
-    | cst_float { char s[12]; sprintf(s, "%.2f", $1); $$.nom = strdup(s); $$.type = "FLOAT"; }
-;
+    | cst_int { char* s = malloc(15); sprintf(s, "%d", $1); $$ = s; }
+    ;
 
-COND: kw_if '(' EXPR '>' EXPR ')' '{' LIST_INST '}' ;
-BOUCLE_FOR: kw_for '(' idf ':' cst_int ':' cst_int ':' cst_int ')' '{' LIST_INST '}' ;
-BOUCLE_WHILE: kw_while '(' EXPR '<' EXPR ')' '{' LIST_INST '}' ;
+COND: kw_if po EXPR sup EXPR pf {
+        quadr("BGE", $3, $5, ""); // On saute si NOT (>) donc si <=
+        fin_if = qc - 1;
+    } 
+    accol_g LIST_INST accol_d {
+        char s[15]; sprintf(s, "%d", qc);
+        update_quad(fin_if, 3, s);
+    }
+    ;
+
+BOUCLE: kw_while { deb_while = qc; } 
+        po EXPR sup EXPR pf {
+            quadr("BGE", $4, $6, ""); 
+            cond_while = qc - 1;
+        }
+        accol_g LIST_INST accol_d {
+            char s[15]; sprintf(s, "%d", deb_while);
+            quadr("BR", s, "", "");
+            sprintf(s, "%d", qc);
+            update_quad(cond_while, 3, s);
+        }
+        ;
 
 %%
 void yyerror(char* msg) { printf("Erreur Syntaxique: ligne %d, col %d\n", nb_line, col); }
-int main() { yyparse(); afficher_ts(); afficher_quads(); return 0; }
+
+int main() {
+        if (argc > 1) {
+        FILE *f = fopen(argv[1], "r");
+        if (f){ yyin = f;}
+        else {
+            printf("Can't open!\n");
+            exit(1);
+        }
+    }
+    yyparse();
+    afficher_ts();
+    afficher_quads();
+    return 0;
+}
