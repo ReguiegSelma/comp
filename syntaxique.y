@@ -11,6 +11,8 @@ extern char* yytext;
 extern FILE *yyin; 
 extern int nb_erreurs;
 
+int fin_if, deb_else;
+void yyerror(char *s);
 int nb_erreurs = 0;
 int yylex();
 char type_svg[20];
@@ -23,7 +25,7 @@ char tmp_addr[10];
     char* str;
 }
 
-%token <str> IDF <entier> INT_VAL <reel> FLOAT_VAL ENT_SIGNE REEL_SIGNE
+%token <str> IDF <entier> INT_VAL <reel> FLOAT_VAL <entier> ENT_SIGNE <reel> REEL_SIGNE
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
 %token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
@@ -49,19 +51,15 @@ PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END
         }
       }
 
-DECLS: DEC DECLS | ;
+DECLS: DEC DECLS 
+     | DEC_CONST DECLS
+     | /* vide */ 
+     ;
 
-DEC: TYPE DEUXPTS LISTE_OBJETS PV 
-   | error PV
-      {
-          printf("Erreur Syntaxique: ligne %d de declaration\n", nb_lignes);
-          nb_erreurs++;
-          yyerrok;
-      }
-   ;
+DEC: TYPE DEUXPTS LISTE_OBJETS PV ;
 
 TYPE: INTEGER { strcpy(type_svg, "INTEGER"); }
-    | FLOAT { strcpy(type_svg, "FLOAT"); }
+    | FLOAT   { strcpy(type_svg, "FLOAT"); }
     ;
 
 LISTE_OBJETS: OBJET VIRG LISTE_OBJETS 
@@ -69,105 +67,105 @@ LISTE_OBJETS: OBJET VIRG LISTE_OBJETS
             ;
 
 OBJET: IDF { 
-        if (rechercher($1) != -1) {printf("Erreur Semantique: Double declaration de %s ligne %d\n", $1, nb_lignes);
-            nb_erreurs++;}
-        else inserer($1, "IDF", type_svg, 0, 0); 
+        inserer($1, "idf", type_svg, 0, 0); 
      }
      | IDF CROCHG INT_VAL CROCHD { 
-         if($3 <= 0) {
-            printf("Erreur Semantique: ligne %d: taille de tableau invalide pour '%s'\n", nb_lignes, $1);
+        // VERIFICATION : La taille du tableau doit être > 0
+        if ($3 <= 0) {
+            printf("Erreur Semantique ligne %d: La taille du tableau '%s' doit etre positive (donnee: %d)\n", 
+                    nb_lignes, $1, $3);
             nb_erreurs++;
-            yyerrok;
-         } else if (rechercher($1) != -1){ printf("Erreur Semantique: Double declaration ligne %d\n", nb_lignes);
-            nb_erreurs++;
-            yyerrok;}
-        else inserer($1, "TAB", type_svg, 0, $3);
-       }
-     | CONST IDF AFFECT VAL_CONST PV { 
-        if (rechercher($2) != -1){ printf("Erreur Semantique: Double declaration ligne %d\n", nb_lignes);
-        nb_erreurs++;
-        yyerrok;
+            // On insère quand même pour éviter des erreurs "non déclaré" plus tard, 
+            // ou on met une taille par défaut.
+            inserer($1, "tab", type_svg, 0, 1); 
+        } else {
+            inserer($1, "tab", type_svg, 0, $3); 
         }
-        else inserer($2, "CONST", type_svg, 0, 0); }
+     }
      ;
+DEC_CONST: CONST IDF AFFECT VAL_CONST PV ;        
 
-VAL_CONST: INT_VAL | FLOAT_VAL | ENT_SIGNE | REEL_SIGNE
+VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
+         | FLOAT_VAL  { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
+         | ENT_SIGNE  { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
+         | REEL_SIGNE { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
 
 INSTS: INST INSTS | ;
-INST: AFF | COND | BOUCLE | WRITE_I 
-      | error PV
-      {
-          printf("Erreur Syntaxique: ligne %d , col %d instruction fausse \n", nb_lignes, nb_col);
-          nb_erreurs++;
-          yyerrok;
-      }
-    ;
+INST: AFF | COND | BOUCLE | WRITE_I | error PV { yyerrok; };
+      
 
-AFF: IDF AFFECT expression PV  {
-    int pos1 = rechercher($1);
-
-    if (pos1 == -1) {
-        printf("Erreur Semantique: %s non declare ligne %d\n", $1, nb_lignes);
-        nb_erreurs++;
-    } 
-    else if (tab[pos1].cst == 1) {
-        printf("Erreur Semantique: Modification d'une constante '%s'\n", $1);
-        nb_erreurs++;
-    } 
-    else {
-        int pos2 = rechercher($3);
-        if (pos2 != -1) {
-            if (strcmp(tab[pos1].type, tab[pos2].type) != 0) {
-                printf("Erreur Semantique: incompatibilite de type ligne %d\n", nb_lignes);
-                nb_erreurs++;
+AFF: 
+    /* --- Cas 1 : Affectation simple (x = expr) --- */
+    IDF AFFECT expression PV {
+        Symbole* s1 = rechercher($1);
+        if (s1 == NULL) {
+            printf("Erreur Semantique ligne %d: Variable '%s' non declaree\n", nb_lignes, $1);
+            nb_erreurs++;
+        } else if (strcmp(s1->code, "cst") == 0) {
+            printf("Erreur Semantique ligne %d: Modification de la constante '%s'\n", nb_lignes, $1);
+            nb_erreurs++;
+        } else {
+            // Vérification de type si l'expression est une variable
+            Symbole* s3 = rechercher($3);
+            if (s3 != NULL) {
+                if (strcmp(s1->type, s3->type) != 0) {
+                    printf("Erreur Semantique ligne %d: Incompatibilite de type entre %s et %s\n", nb_lignes, $1, $3);
+                    nb_erreurs++;
+                }
             }
+            quad("=", $3, "", $1);
         }
-        quad("=", $3, "", $1);
     }
-}
-   | IDF AFFECT error PV {
-        printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
+/* --- Cas 2 : Erreur sur l'expression simple --- */
+    | IDF AFFECT error PV {
+        printf("Erreur Syntaxique: ligne %d, col %d expression invalide\n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
-     }
-   | IDF CROCHG expression CROCHD AFFECT expression PV { 
-    int p = rechercher($1);
-    int p2 = rechercher($6);
-    if(p == -1) {
-        printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
-        nb_erreurs++;
-        yyerrok;
-    } else if ($3 <=tab[p].taille || $3 < 0) {
-                printf("Erreur Semantique: ligne %d: index %d hors limites pour '%s' (taille %d)\n", nb_lignes, $3, $1, tab[p].taille);
-                nb_erreurs++;
-                yyerrok;
-            }
-        
-        if(tab[p].tab == 0) {
-            printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
+    }
+
+/* --- Cas 3 : Affectation Tableau (t[i] = expr) --- */
+    | IDF CROCHG expression CROCHD AFFECT expression PV { 
+        Symbole* p = rechercher($1);     // Recherche du tableau
+        Symbole* p_idx = rechercher($3); // Recherche si l'indice est une variable
+        Symbole* p_src = rechercher($6); // Recherche si la source est une variable
+
+        if(p == NULL) {
+            printf("Erreur Semantique ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
             nb_erreurs++;
-        } else if ( tab[p].cst == 0) {
-        printf("Erreur Semantique: ligne %d: '%s' est une constante\n", nb_lignes, $1);
-        nb_erreurs++;
-        yyerrok;
-        } else if (p2==-1 ){
-        if (strcmp(tab[p].type, "INTEGER") == 0 && strcmp(tab[p2].type, "FLOAT") == 0) {
-            printf("Erreur Semantique: ligne %d: incompatibilite de type sur '%s'\n", nb_lignes, $1);
-            nb_erreurs++;
-            yyerrok;
-        }}
+        } 
         else {
-            char res[30];
+            // 1. Vérifier si c'est bien un tableau
+            if(strcmp(p->code, "tab") != 0) {
+                printf("Erreur Semantique ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
+                nb_erreurs++;
+            } 
+            
+            // 2. Vérification de la borne (si l'indice est un nombre constant)
+            // On convertit le texte de l'indice en entier pour comparer
+            int val_index = atoi($3); 
+            if (p_idx == NULL && (val_index >= p->taille || val_index < 0)) {
+                printf("Erreur Semantique ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
+                        nb_lignes, val_index, $1, p->taille);
+                nb_erreurs++;
+            }
+
+            // 3. Vérification des types
+            if (p_src != NULL) {
+                if (strcmp(p->type, p_src->type) != 0) {
+                    printf("Erreur Semantique ligne %d: incompatibilite de type entre le tableau %s et %s\n", 
+                            nb_lignes, $1, $6);
+                    nb_erreurs++;
+                }
+            }
+
+            // 4. Génération du quadruplet
+            char res[40];
             sprintf(res, "%s[%s]", $1, $3);
             quad("=", $6, "", res);
-
-            if (p2 != -1) {
-                tab[p].valeur = tab[p2].valeur;
-            } else {
-                tab[p].valeur = atof($6);
-            }
         }
     }
+
+    /* --- Cas 4 : Erreurs de rattrapage Tableau --- */
    | IDF CROCHG error CROCHD AFFECT expression PV {
         printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
@@ -180,108 +178,131 @@ AFF: IDF AFFECT expression PV  {
      }
 
 
-expression: expression PLUS terme {
-    if(strcmp($1, "empty")==0 || strcmp($3, "empty")==0)
-        $$ = strdup("empty");
-    else {
-        $$ = new_temp();
-        quad("+", $1, $3, $$);
-    }
-}
-| expression MOINS terme {
-    if(strcmp($1, "empty")==0 || strcmp($3, "empty")==0)
-        $$ = strdup("empty");
-    else {
-        $$ = new_temp();
-        quad("-", $1, $3, $$);
-    }
-}
+expression: expression PLUS terme { 
+                if(strcmp($1, "empty") == 0 || strcmp($3, "empty") == 0) {
+                    $$ = strdup("empty");
+                } else {
+                    $$ = new_temp(); 
+                    quad("+", $1, $3, $$); 
+                }
+            }
+          | expression MOINS terme { 
+                if(strcmp($1, "empty") == 0 || strcmp($3, "empty") == 0) {
+                    $$ = strdup("empty");
+                } else {
+                    $$ = new_temp(); 
+                    quad("-", $1, $3, $$); 
+                }
+            }
 | terme { $$ = $1; }
 ;
 
-terme: terme MULT facteur {
-    if(strcmp($1,"empty")==0 || strcmp($3,"empty")==0)
-        $$ = strdup("empty");
-    else {
-        $$ = new_temp();
-        quad("*", $1, $3, $$);
-    }}
-| terme DIV facteur {
-    if(strcmp($3,"0")==0 || strcmp($3,"0.0")==0) {
-        printf("Erreur Semantique: Division par zero ligne %d\n", nb_lignes);
-        nb_erreurs++;
-        $$ = strdup("empty");
-    } else if(strcmp($1,"empty")==0 || strcmp($3,"empty")==0) {
-        $$ = strdup("empty");
-    } else {
-        $$ = new_temp();
-        quad("/", $1, $3, $$);
-    }
-}
-| facteur { $$ = $1; }
-;
-
-facteur: IDF { 
-            int p = rechercher($1);
-            if (p == -1) {
-             printf("Erreur Semantique: variable '%s' non declaree ligne %d\n", $1, nb_lignes);
-             nb_erreurs++;
-             $$ = strdup("empty");
-            } 
-            else {
-                //tableau utilisé sans index
-             if (tab[p].tab != 0) {
-                 printf("Erreur Semantique: '%s' est un tableau, index requis ligne %d\n", $1, nb_lignes);
-                 nb_erreurs++;
-                }
-             $$ = strdup($1);
+terme: terme MULT facteur { 
+            if(strcmp($1, "empty") == 0 || strcmp($3, "empty") == 0) {
+                $$ = strdup("empty");
+            } else {
+                $$ = new_temp(); 
+                quad("*", $1, $3, $$); 
             }
         }
-       | IDF CROCHG expression CROCHD { 
-            int p = rechercher($1);
-            if (p== -1) {
-                printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
-                nb_erreurs++; $$=strdup("empty");
+| terme DIV facteur { 
+            if(strcmp($1, "empty") == 0 || strcmp($3, "empty") == 0) {
+                $$ = strdup("empty");
             } else {
-                if(tab[p].tab != 0) {
-                    printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
+                // Ta vérification de division par zéro
+                if (strcmp($3, "0") == 0 || strcmp($3, "0.00") == 0) {
+                    printf("Erreur Semantique ligne %d: Division par zero !\n", nb_lignes);
                     nb_erreurs++;
+                    $$ = strdup("empty");
+                } else {
+                    $$ = new_temp(); 
+                    quad("/", $1, $3, $$); 
                 }
-                if (strcmp(tab[p].type, "INTEGER") == 0){
-                    if ($3 >= taille || $3 < 0) {
-                        printf("Erreur Semantique: ligne %d: index %d hors limites pour '%s'\n", nb_lignes, $3, $1);
-                        nb_erreurs++;
+            }
+        }
+     | facteur { $$ = $1; };
+
+facteur: 
+    /* --- Identifiant simple (avec vérification si c'est un tableau) --- */
+    IDF { 
+        Symbole* s = rechercher($1);
+        if (s == NULL) {
+            printf("Erreur Semantique: variable '%s' non declaree ligne %d\n", $1, nb_lignes);
+            nb_erreurs++;
+            $$ = strdup("empty");
+        } else {
+            if (strcmp(s->code, "tab") == 0) {
+                printf("Erreur Semantique: '%s' est un tableau, index requis ligne %d\n", $1, nb_lignes);
+                nb_erreurs++;
+                $$ = strdup("empty");
+            } else {
+                $$ = strdup($1);
+            }
+        }
+    }
+/* --- Accès Tableau (avec vérification de borne et type) --- */
+    | IDF CROCHG expression CROCHD { 
+        Symbole* s = rechercher($1);
+        if (s == NULL) {
+            printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
+            nb_erreurs++; 
+            $$ = strdup("empty");
+        } else {
+            if (strcmp(s->code, "tab") != 0) {
+                printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
+                nb_erreurs++;
+                $$ = strdup("empty");
+            } else {
+                // Si l'index est valide (pas empty), on vérifie la borne statiquement
+                if (strcmp($3, "empty") != 0) {
+                    // Si l'expression d'index est un nombre direct (pas une variable)
+                    if (rechercher($3) == NULL) {
+                        int val_index = atoi($3);
+                        if (val_index >= s->taille || val_index < 0) {
+                            printf("Erreur Semantique: ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
+                                    nb_lignes, val_index, $1, s->taille);
+                            nb_erreurs++;
+                        }
                     }
                 }
-                char* t = malloc(30);
-                 sprintf(t, "%s[%s]", $1, $3);
-                 $$ = t; 
+                char* t = malloc(50);
+                sprintf(t, "%s[%s]", $1, $3);
+                $$ = t; 
             }
-         }
-       | IDF CROCHG error CROCHD {
-            printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
-            nb_erreurs++;
-            yyerrok;
-            $$ = strdup("empty");
-         }
-       | INT_VAL { $$ = $1; }
-       | FLOAT_VAL { $$ = $1; }
-       | PARG expression PARD { $$ = $2; }
-       | PARG error PARD {
-            printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
-            nb_erreurs++;
-            yyerrok;
-            $$ =strdup("empty");
-         }
-       | PARG MOINS INT_VAL PARD { char* t=malloc(25); sprintf(t,"-%s",$3); $$=t; }
-       | PARG PLUS INT_VAL PARD { char* r=malloc(20); sprintf(r,"+%s",$3); $$=r; }  
-       | PARG MOINS FLOAT_VAL PARD { char* temp = malloc(30); sprintf(temp, "-%s", $3); $$= temp; }
-       | PARG PLUS FLOAT_VAL PARD { char* temp = malloc(30); sprintf(temp, "+%s", $3); $$ = temp; }
-       ;
+        }
+    }
+/* --- Rattrapage d'erreur sur l'index du tableau --- */
+    | IDF CROCHG error CROCHD {
+        printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+        $$ = strdup("empty");
+    }
+    | INT_VAL { 
+        char b[20]; sprintf(b, "%d", $1); $$ = strdup(b); 
+    }
+    | FLOAT_VAL { 
+        char b[20]; sprintf(b, "%.2f", $1); $$ = strdup(b); 
+    }
 
+    | ENT_SIGNE { 
+        char b[20]; sprintf(b, "%d", $1); $$ = strdup(b); 
+    }
+    | REEL_SIGNE { 
+        char b[20]; sprintf(b, "%.2f", $1); $$ = strdup(b); 
+    }
 
+/* --- Expressions entre parenthèses --- */
+    | PARG expression PARD { $$ = $2; }
 
-
+    /* --- Rattrapage d'erreur sur parenthèses --- */
+    | PARG error PARD {
+        printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+        $$ = strdup("empty");
+    }
+    ;
 
 COND: IF PARG EXPR_LOG PARD 
       { 
@@ -289,24 +310,29 @@ COND: IF PARG EXPR_LOG PARD
         quad("BZ", "", $3, ""); 
       }
       ACCOLG INSTS ACCOLD ELSE_PART {
+          // On patche le BZ du début vers ici si la condition était fausse
           sprintf(tmp_addr, "%d", prochain_quad());
           modifier_quad(fin_if, 3, tmp_addr);
       }
-    | IF PARG error PARD
+| IF PARG error PARD
       {
         printf("Erreur Syntaxique: ligne %d , col %d condition invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
       }
       ACCOLG INSTS ACCOLD ELSE_PART
+    ;
 
 ELSE_PART: ELSE 
            {
              deb_else = prochain_quad();
-             quad("BR", "", "", "");
+             quad("BR", "", "", ""); // Saut pour sauter le bloc ELSE si le IF était vrai
+             
+             // On patche le BZ du IF pour qu'il vienne ICI (début du else)
              sprintf(tmp_addr, "%d", prochain_quad());
              modifier_quad(fin_if, 3, tmp_addr);
-             fin_if = deb_else;
+             
+             fin_if = deb_else; // Maintenant, fin_if pointe sur le BR pour le patcher plus tard
            }
            ACCOLG INSTS ACCOLD
          | %prec LOWER_THAN_ELSE 
@@ -315,71 +341,99 @@ ELSE_PART: ELSE
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
         {
-           prochain_quad();
-           quad("BZ", "", $4, "");
+           int q_bz = prochain_quad();
+           quad("BZ", "", $4, ""); 
+           push_loop_cond(q_bz); // On mémorise l'adresse du BZ pour le patcher
         }
         ACCOLG INSTS ACCOLD
         {
            int cond = pop_loop_cond();
            int start = pop_loop_start();
+           
            sprintf(tmp_addr, "%d", start);
-           quad("BR", "", "", tmp_addr);
+           quad("BR", "", "", tmp_addr); // Retour au test de condition
+           
            sprintf(tmp_addr, "%d", prochain_quad());
-           modifier_quad(cond, 3, tmp_addr);
+           modifier_quad(cond, 3, tmp_addr); // Sortie de boucle
         }
-      | FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD 
+        | FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD 
         {
-            quad("=", $5, "", $3);
-            prochain_quad(); 
-            char* t = new_temp();
-            quad("BG", $3, $7, t); 
-            prochain_quad();
-            quad("BZ", "", t, ""); 
+           // Initialisation : i = start_val
+           char val_init[20]; sprintf(val_init, "%d", $5);
+           quad("=", val_init, "", $3);
+           
+           push_loop_start(prochain_quad()); // Adresse du test de sortie
+           
+           char* t = new_temp();
+           char val_limit[20]; sprintf(val_limit, "%d", $7);
+           quad("BG", $3, val_limit, t); // Si i > limite
+           
+           int q_bz = prochain_quad();
+           quad("BZ", "", t, ""); // Si BG est vrai (t=1), on sort
+           push_loop_cond(q_bz);
         }
         ACCOLG INSTS ACCOLD
         {
-            char* t2 = new_temp();
-            quad("+", $3, $9, t2);
-            quad("=", t2, "", $3);
-            int cond = 0;
-            int start = 0;
-            sprintf(tmp_addr, "%d", start);
-            quad("BR", "", "", tmp_addr);
-            sprintf(tmp_addr, "%d", prochain_quad());
-            modifier_quad(cond, 3, tmp_addr);
+           // Incrémentation : i = i + step
+           char* t2 = new_temp();
+           char val_step[20]; sprintf(val_step, "%d", $9);
+           quad("+", $3, val_step, t2);
+           quad("=", t2, "", $3);
+           
+           int cond = pop_loop_cond();
+           int start = pop_loop_start();
+           
+           sprintf(tmp_addr, "%d", start);
+           quad("BR", "", "", tmp_addr);
+           
+           sprintf(tmp_addr, "%d", prochain_quad());
+           modifier_quad(cond, 3, tmp_addr);
         }
 
-EXPR_LOG: EXPR_LOG OR EXPR_LOG { $$ = new_temp(); quad("OR", $1, $3, $$); }
+EXPR_LOG: EXPR_LOG OR EXPR_LOG  { $$ = new_temp(); quad("OR", $1, $3, $$); }
         | EXPR_LOG AND EXPR_LOG { $$ = new_temp(); quad("AND", $1, $3, $$); }
-        | NOT EXPR_LOG { $$ = new_temp(); quad("NOT", $2, "", $$); }
-        | expression SUP expression { $$ = new_temp(); quad("SUP", $1, $3, $$); }
-        | expression INF expression { $$ = new_temp(); quad("INF", $1, $3, $$); }
-        | expression EGAL expression { $$ = new_temp(); quad("EGAL", $1, $3, $$); }
-        | PARG EXPR_LOG PARD { $$ = $2; }
+        | NOT EXPR_LOG          { $$ = new_temp(); quad("NOT", $2, "", $$); }
+        | expression SUP expression   { $$ = new_temp(); quad("SUP", $1, $3, $$); }
+        | expression INF expression   { $$ = new_temp(); quad("INF", $1, $3, $$); }
+        | expression SUPEG expression { $$ = new_temp(); quad("SUPEG", $1, $3, $$); }
+        | expression INFEG expression { $$ = new_temp(); quad("INFEG", $1, $3, $$); }
+        | expression EGAL expression  { $$ = new_temp(); quad("EGAL", $1, $3, $$); }
+        | PARG EXPR_LOG PARD    { $$ = $2; }
         ;
 
 
-
 WRITE_I: WRITE PARG IDF PARD PV { 
-    if(rechercher($3) ==-1){ printf("Erreur Semantique: ligne %d, variable '%s' non declaree\n",nb_lignes, $3);nb_erreurs++;}
+    if(rechercher($3) == NULL) { 
+        printf("Erreur Semantique ligne %d: variable '%s' non declaree\n", nb_lignes, $3);
+        nb_erreurs++;
+    }
 }
 
 
 
-
 %%
+
+void yyerror(char *s) {
+    printf("Erreur Syntaxique ligne %d, col %d : %s (proche de '%s')\n", 
+            nb_lignes, nb_col, s, yytext);
+}
+
+
 int main(int argc, char *argv[]) {
     if (argc > 1) {
         FILE *f = fopen(argv[1], "r");
-        if (f){ yyin = f;}
+        if (f) { yyin = f; }
         else {
-            printf("Can't open!\n");
+            printf("Impossible d'ouvrir le fichier !\n");
             exit(1);
         }
     }
+    
     yyparse();
+
     afficher_ts_ids();
     afficher_ts_kw();
     afficher_ts_sep();
+    
     return 0;
 }

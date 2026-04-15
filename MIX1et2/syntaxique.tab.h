@@ -57,44 +57,40 @@ extern int yydebug;
     IDF = 258,                     /* IDF  */
     INT_VAL = 259,                 /* INT_VAL  */
     FLOAT_VAL = 260,               /* FLOAT_VAL  */
-    ENT_SIGNE = 261,               /* ENT_SIGNE  */
-    REEL_SIGNE = 262,              /* REEL_SIGNE  */
-    PROGRAM = 263,                 /* PROGRAM  */
-    DECL = 264,                    /* DECL  */
-    ENDDECL = 265,                 /* ENDDECL  */
-    BEGIN_P = 266,                 /* BEGIN_P  */
-    END = 267,                     /* END  */
-    INTEGER = 268,                 /* INTEGER  */
-    FLOAT = 269,                   /* FLOAT  */
-    CONST = 270,                   /* CONST  */
-    IF = 271,                      /* IF  */
-    ELSE = 272,                    /* ELSE  */
-    FOR = 273,                     /* FOR  */
-    WHILE = 274,                   /* WHILE  */
-    WRITE = 275,                   /* WRITE  */
-    PLUS = 276,                    /* PLUS  */
-    MOINS = 277,                   /* MOINS  */
-    MULT = 278,                    /* MULT  */
-    DIV = 279,                     /* DIV  */
-    AFFECT = 280,                  /* AFFECT  */
-    SUP = 281,                     /* SUP  */
-    INF = 282,                     /* INF  */
-    EGAL = 283,                    /* EGAL  */
-    SUPEG = 284,                   /* SUPEG  */
-    INFEG = 285,                   /* INFEG  */
-    PV = 286,                      /* PV  */
-    DEUXPTS = 287,                 /* DEUXPTS  */
-    VIRG = 288,                    /* VIRG  */
-    PARG = 289,                    /* PARG  */
-    PARD = 290,                    /* PARD  */
-    ACCOLG = 291,                  /* ACCOLG  */
-    ACCOLD = 292,                  /* ACCOLD  */
-    CROCHG = 293,                  /* CROCHG  */
-    CROCHD = 294,                  /* CROCHD  */
-    AND = 295,                     /* AND  */
-    OR = 296,                      /* OR  */
-    NOT = 297,                     /* NOT  */
-    LOWER_THAN_ELSE = 298          /* LOWER_THAN_ELSE  */
+    PROGRAM = 261,                 /* PROGRAM  */
+    DECL = 262,                    /* DECL  */
+    ENDDECL = 263,                 /* ENDDECL  */
+    BEGIN_P = 264,                 /* BEGIN_P  */
+    END = 265,                     /* END  */
+    INTEGER = 266,                 /* INTEGER  */
+    FLOAT = 267,                   /* FLOAT  */
+    CONST = 268,                   /* CONST  */
+    IF = 269,                      /* IF  */
+    ELSE = 270,                    /* ELSE  */
+    FOR = 271,                     /* FOR  */
+    WHILE = 272,                   /* WHILE  */
+    WRITE = 273,                   /* WRITE  */
+    PLUS = 274,                    /* PLUS  */
+    MOINS = 275,                   /* MOINS  */
+    MULT = 276,                    /* MULT  */
+    DIV = 277,                     /* DIV  */
+    AFFECT = 278,                  /* AFFECT  */
+    SUP = 279,                     /* SUP  */
+    INF = 280,                     /* INF  */
+    EGAL = 281,                    /* EGAL  */
+    PV = 282,                      /* PV  */
+    DEUXPTS = 283,                 /* DEUXPTS  */
+    VIRG = 284,                    /* VIRG  */
+    PARG = 285,                    /* PARG  */
+    PARD = 286,                    /* PARD  */
+    ACCOLG = 287,                  /* ACCOLG  */
+    ACCOLD = 288,                  /* ACCOLD  */
+    CROCHG = 289,                  /* CROCHG  */
+    CROCHD = 290,                  /* CROCHD  */
+    AND = 291,                     /* AND  */
+    OR = 292,                      /* OR  */
+    NOT = 293,                     /* NOT  */
+    LOWER_THAN_ELSE = 294          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -103,13 +99,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 22 "syntaxique.y"
-
-    int entier;
-    float reel;
+#line 27 "syntaxique.y"
+ 
     char* str;
+    int integer;
+    float float_val;
 
-#line 113 "syntaxique.tab.h"
+#line 109 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
