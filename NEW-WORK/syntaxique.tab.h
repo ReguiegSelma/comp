@@ -65,25 +65,27 @@ extern int yydebug;
     kw_if = 266,                   /* kw_if  */
     kw_else = 267,                 /* kw_else  */
     kw_while = 268,                /* kw_while  */
-    idf = 269,                     /* idf  */
-    cst_int = 270,                 /* cst_int  */
-    cst_float = 271,               /* cst_float  */
-    plus = 272,                    /* plus  */
-    moins = 273,                   /* moins  */
-    mult = 274,                    /* mult  */
-    divi = 275,                    /* divi  */
-    aff = 276,                     /* aff  */
-    sup = 277,                     /* sup  */
-    inf = 278,                     /* inf  */
-    sc = 279,                      /* sc  */
-    dp = 280,                      /* dp  */
-    vg = 281,                      /* vg  */
-    po = 282,                      /* po  */
-    pf = 283,                      /* pf  */
-    crochg = 284,                  /* crochg  */
-    crochd = 285,                  /* crochd  */
-    accol_g = 286,                 /* accol_g  */
-    accol_d = 287                  /* accol_d  */
+    kw_for = 269,                  /* kw_for  */
+    comp_egal = 270,               /* comp_egal  */
+    idf = 271,                     /* idf  */
+    cst_int = 272,                 /* cst_int  */
+    cst_float = 273,               /* cst_float  */
+    plus = 274,                    /* plus  */
+    moins = 275,                   /* moins  */
+    mult = 276,                    /* mult  */
+    divi = 277,                    /* divi  */
+    aff = 278,                     /* aff  */
+    sup = 279,                     /* sup  */
+    inf = 280,                     /* inf  */
+    sc = 281,                      /* sc  */
+    dp = 282,                      /* dp  */
+    vg = 283,                      /* vg  */
+    po = 284,                      /* po  */
+    pf = 285,                      /* pf  */
+    crochg = 286,                  /* crochg  */
+    crochd = 287,                  /* crochd  */
+    accol_g = 288,                 /* accol_g  */
+    accol_d = 289                  /* accol_d  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -92,13 +94,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "syntaxique.y"
+#line 27 "syntaxique.y"
 
     int entier;
     float reel;
     char* str;
 
-#line 102 "syntaxique.tab.h"
+#line 104 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

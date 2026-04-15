@@ -23,7 +23,7 @@ char tmp_addr[10];
     char* str;
 }
 
-%token <str> IDF <entier> INT_VAL <reel> FLOAT_VAL ENT_SIGNE REEL_SIGNE
+%token <str> IDF <entier> INT_VAL ENT_SIGNE <reel> FLOAT_VAL REEL_SIGNE
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
 %token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
@@ -315,25 +315,27 @@ ELSE_PART: ELSE
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
         {
-           prochain_quad();
+         set_loop_cond(prochain_quad());
            quad("BZ", "", $4, "");
         }
         ACCOLG INSTS ACCOLD
         {
            int cond = pop_loop_cond();
            int start = pop_loop_start();
+
            sprintf(tmp_addr, "%d", start);
            quad("BR", "", "", tmp_addr);
+
            sprintf(tmp_addr, "%d", prochain_quad());
            modifier_quad(cond, 3, tmp_addr);
         }
       | FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD 
         {
             quad("=", $5, "", $3);
-            prochain_quad(); 
+            push_loop_start(prochain_quad());
             char* t = new_temp();
             quad("BG", $3, $7, t); 
-            prochain_quad();
+            set_loop_cond(prochain_quad());
             quad("BZ", "", t, ""); 
         }
         ACCOLG INSTS ACCOLD
@@ -341,10 +343,12 @@ BOUCLE: WHILE { push_loop_start(prochain_quad()); }
             char* t2 = new_temp();
             quad("+", $3, $9, t2);
             quad("=", t2, "", $3);
-            int cond = 0;
-            int start = 0;
+            int cond = pop_loop_cond();
+            int start = pop_loop_start();
+
             sprintf(tmp_addr, "%d", start);
             quad("BR", "", "", tmp_addr);
+
             sprintf(tmp_addr, "%d", prochain_quad());
             modifier_quad(cond, 3, tmp_addr);
         }
