@@ -1,8 +1,6 @@
 PROGRAM Test
 DECL
 INTEGER : A, B,Y,I,C, T[4] ;
-FLOAT : X ;
-FLOAT: X;
 CONST MAX = 10;
 ENDDECL
 BEGIN
@@ -17,7 +15,7 @@ A = 10 / 0 ;
 A=5;
 X = A + 2.5 ;
 B=X+1;
-T[-2]=4;
+T[2]=4;
 T[5]=2;
 T[1]=3.2;
 C=3;
@@ -29,7 +27,5 @@ IF (A > B) {
 FOR (I : 0 : 1 : 10) {
     A = A + I;
 }
-WHILE (A < 10) {
-A = A + 1;
-}
+
 END
