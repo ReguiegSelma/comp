@@ -1,7 +1,7 @@
 PROGRAM Test
 DECL
 INTEGER : A, B,Y,I,C, T[4] //T[2]//,G[-2] ;
-//FLOAT : X ;
+FLOAT : X ;
 //FLOAT: X;
 //CONST MAX = 10;
 //FLOAT: X;
