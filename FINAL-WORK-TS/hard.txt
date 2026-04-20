@@ -1,0 +1,74 @@
+PROGRAM Test
+DECL
+   INTEGER : i, j, n, res, tab[5];
+   INTEGER : A, B, C;
+   FLOAT : x, y, calcul,t[3];
+   CONST limite = 100;
+   CONST PI = 3.14;
+ENDDECL
+BEGIN
+
+A = 10;
+   B = 5;
+   C = 0;
+
+   IF (A > 0) {
+       IF (B > A) {
+           C = 1; // Ne devrait pas être exécuté
+       } ELSE {
+           IF (B == 5) {
+               C = 2; // Cible attendue
+           }
+       }
+       // Après le bloc interne, on revient ici
+       A = 20; 
+   }
+   WRITE(C);
+
+   // 1. Tests d'initialisation et promotion de type
+   x = 10;        // INTEGER vers FLOAT (doit passer maintenant)
+   y = 5.5;
+   n = 2;
+   t[1]=2;
+   t[1]=2.1;
+   
+   // 2. Tests arithmétiques complexes (Propagation de type)
+   calcul = (x + y) * n;  // FLOAT + FLOAT * INTEGER -> FLOAT
+   res = 10 + 20 + 30;    // INTEGER (doit passer)
+   
+   // 3. Test Division par zéro (Dynamique)
+   i = 0;
+   // res = 100 / i;      // Décommente pour tester l'erreur division variable
+   
+   // 4. Test Tableaux (Bornes et Types)
+   tab[0] = 1;
+   tab[4] = 10;
+   // tab[5] = 100;      // Erreur : hors borne (taille 5)
+   
+   j = 2;
+   tab[j] = tab[0] + 5;   // Indexation via variable + calcul
+   
+   // 5. Test IF imbriqué avec EXPR_LOG complexe
+   IF ((x > 5) && (y < 10) || (n == 2)) {
+       IF (calcul != 0) {
+           WRITE(calcul);
+       } ELSE {
+           WRITE(i);
+       }
+   }
+   
+   // 6. Le test de la mort : Boucles imbriquées et dépendances
+   FOR (i : 0 : 1 : 4) {
+       j = 0;
+       WHILE (j < i) {
+           tab[i] = tab[i] + j;
+           j = j + 1;
+       }
+   }
+   
+   // 7. Erreurs sémantiques volontaires (à tester une par une)
+   // PI = 4.0;          // Erreur : modification constante
+   // n = y;             // Erreur : FLOAT vers INTEGER (perte de précision)
+   // WRITE(inconnu);    // Erreur : non déclaré
+   
+END
