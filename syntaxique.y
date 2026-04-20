@@ -27,7 +27,7 @@ char tmp_addr[10];
 
 %token <str> IDF <entier> INT_VAL <reel> FLOAT_VAL <entier> ENT_SIGNE <reel> REEL_SIGNE
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
-%token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
+%token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG DIFF PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
 %type <str> expression terme facteur EXPR_LOG
 
@@ -44,17 +44,16 @@ PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END
       {      
         if(nb_erreurs == 0){
             printf("Syntaxe Correcte\n");
-            YYACCEPT;
             afficher_quads();
+            YYACCEPT;
         }else{
-            printf("\n Compilation echouee : %d erreur(p) detectee(p)\n", nb_erreurs);
+            printf("\n Compilation echouee : %d erreur(s) detectee(s)\n", nb_erreurs);
         }
       }
 
 DECLS: DEC DECLS 
      | DEC_CONST DECLS
-     | /* vide */ 
-     ;
+     |;
 
 DEC: TYPE DEUXPTS LISTE_OBJETS PV ;
 
@@ -75,15 +74,13 @@ OBJET: IDF {
             printf("Erreur Semantique ligne %d: La taille du tableau '%s' doit etre positive (donnee: %d)\n", 
                     nb_lignes, $1, $3);
             nb_erreurs++;
-            // On insère quand même pour éviter des erreurs "non déclaré" plus tard, 
-            // ou on met une taille par défaut.
-            inserer($1, "tab", type_svg, 0, 1); 
+            yyerrok; 
         } else {
             inserer($1, "tab", type_svg, 0, $3); 
         }
      }
      ;
-DEC_CONST: CONST IDF AFFECT VAL_CONST PV ;        
+DEC_CONST: CONST IDF AFFECT VAL_CONST PV ;
 
 VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
          | FLOAT_VAL  { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
@@ -91,7 +88,8 @@ VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
          | REEL_SIGNE { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
 
 INSTS: INST INSTS | ;
-INST: AFF | COND | BOUCLE | WRITE_I | error PV { yyerrok; };
+INST: AFF| COND | BOUCLE | WRITE_I 
+    | error PV {yyerrok;};
       
 
 AFF: 
@@ -101,9 +99,11 @@ AFF:
         if (s1 == NULL) {
             printf("Erreur Semantique ligne %d: Variable '%s' non declaree\n", nb_lignes, $1);
             nb_erreurs++;
+            yyerrok;
         } else if (strcmp(s1->code, "cst") == 0) {
             printf("Erreur Semantique ligne %d: Modification de la constante '%s'\n", nb_lignes, $1);
             nb_erreurs++;
+            yyerrok;
         } else {
             // Vérification de type si l'expression est une variable
             Symbole* s3 = rechercher($3);
@@ -111,13 +111,14 @@ AFF:
                 if (strcmp(s1->type, s3->type) != 0) {
                     printf("Erreur Semantique ligne %d: Incompatibilite de type entre %s et %s\n", nb_lignes, $1, $3);
                     nb_erreurs++;
+                    yyerrok;
                 }
             }
             quad("=", $3, "", $1);
         }
     }
 /* --- Cas 2 : Erreur sur l'expression simple --- */
-    | IDF AFFECT error PV {
+| IDF AFFECT error PV {
         printf("Erreur Syntaxique: ligne %d, col %d expression invalide\n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
@@ -132,12 +133,14 @@ AFF:
         if(p == NULL) {
             printf("Erreur Semantique ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
             nb_erreurs++;
+            yyerrok;
         } 
         else {
             // 1. Vérifier si c'est bien un tableau
             if(strcmp(p->code, "tab") != 0) {
                 printf("Erreur Semantique ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
                 nb_erreurs++;
+                yyerrok;
             } 
             
             // 2. Vérification de la borne (si l'indice est un nombre constant)
@@ -147,6 +150,7 @@ AFF:
                 printf("Erreur Semantique ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
                         nb_lignes, val_index, $1, p->taille);
                 nb_erreurs++;
+                yyerrok;
             }
 
             // 3. Vérification des types
@@ -155,6 +159,7 @@ AFF:
                     printf("Erreur Semantique ligne %d: incompatibilite de type entre le tableau %s et %s\n", 
                             nb_lignes, $1, $6);
                     nb_erreurs++;
+                    yyerrok;
                 }
             }
 
@@ -206,6 +211,7 @@ terme: terme MULT facteur {
             }
         }
 | terme DIV facteur { 
+            Symbole* s=rechercher($3);
             if(strcmp($1, "empty") == 0 || strcmp($3, "empty") == 0) {
                 $$ = strdup("empty");
             } else {
@@ -213,13 +219,20 @@ terme: terme MULT facteur {
                 if (strcmp($3, "0") == 0 || strcmp($3, "0.00") == 0) {
                     printf("Erreur Semantique ligne %d: Division par zero !\n", nb_lignes);
                     nb_erreurs++;
+                    yyerrok;
                     $$ = strdup("empty");
                 } else {
+                    if (s->val == 0) {
+                        printf("Erreur Semantique: variable ligne %d: DDivision par zero !\n", nb_lignes);
+                        nb_erreurs++;
+                        yyerrok;
+                        $$ = strdup("empty");
+            }
+            else{
                     $$ = new_temp(); 
                     quad("/", $1, $3, $$); 
                 }
-            }
-        }
+        }}}
      | facteur { $$ = $1; };
 
 facteur: 
@@ -229,11 +242,13 @@ facteur:
         if (s == NULL) {
             printf("Erreur Semantique: variable '%s' non declaree ligne %d\n", $1, nb_lignes);
             nb_erreurs++;
+            yyerrok;
             $$ = strdup("empty");
         } else {
             if (strcmp(s->code, "tab") == 0) {
                 printf("Erreur Semantique: '%s' est un tableau, index requis ligne %d\n", $1, nb_lignes);
                 nb_erreurs++;
+                yyerrok;
                 $$ = strdup("empty");
             } else {
                 $$ = strdup($1);
@@ -246,11 +261,13 @@ facteur:
         if (s == NULL) {
             printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, $1);
             nb_erreurs++; 
+            yyerrok;
             $$ = strdup("empty");
         } else {
             if (strcmp(s->code, "tab") != 0) {
                 printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, $1);
                 nb_erreurs++;
+                yyerrok;
                 $$ = strdup("empty");
             } else {
                 // Si l'index est valide (pas empty), on vérifie la borne statiquement
@@ -262,6 +279,7 @@ facteur:
                             printf("Erreur Semantique: ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
                                     nb_lignes, val_index, $1, s->taille);
                             nb_erreurs++;
+                            yyerrok;
                         }
                     }
                 }
@@ -397,15 +415,18 @@ EXPR_LOG: EXPR_LOG OR EXPR_LOG  { $$ = new_temp(); quad("OR", $1, $3, $$); }
         | expression INF expression   { $$ = new_temp(); quad("INF", $1, $3, $$); }
         | expression SUPEG expression { $$ = new_temp(); quad("SUPEG", $1, $3, $$); }
         | expression INFEG expression { $$ = new_temp(); quad("INFEG", $1, $3, $$); }
+        | expression DIFF expression  { $$ = new_temp(); quad("DIFF", $1, $3, $$); }
         | expression EGAL expression  { $$ = new_temp(); quad("EGAL", $1, $3, $$); }
         | PARG EXPR_LOG PARD    { $$ = $2; }
         ;
 
 
 WRITE_I: WRITE PARG IDF PARD PV { 
+    printf("%s \n", $3);
     if(rechercher($3) == NULL) { 
         printf("Erreur Semantique ligne %d: variable '%s' non declaree\n", nb_lignes, $3);
         nb_erreurs++;
+        yyerrok;
     }
 }
 
@@ -413,10 +434,7 @@ WRITE_I: WRITE PARG IDF PARD PV {
 
 %%
 
-void yyerror(char *s) {
-    printf("Erreur Syntaxique ligne %d, col %d : %s (proche de '%s')\n", 
-            nb_lignes, nb_col, s, yytext);
-}
+void yyerror(char *s) {}
 
 
 int main(int argc, char *argv[]) {

@@ -82,19 +82,20 @@ extern int yydebug;
     EGAL = 283,                    /* EGAL  */
     SUPEG = 284,                   /* SUPEG  */
     INFEG = 285,                   /* INFEG  */
-    PV = 286,                      /* PV  */
-    DEUXPTS = 287,                 /* DEUXPTS  */
-    VIRG = 288,                    /* VIRG  */
-    PARG = 289,                    /* PARG  */
-    PARD = 290,                    /* PARD  */
-    ACCOLG = 291,                  /* ACCOLG  */
-    ACCOLD = 292,                  /* ACCOLD  */
-    CROCHG = 293,                  /* CROCHG  */
-    CROCHD = 294,                  /* CROCHD  */
-    AND = 295,                     /* AND  */
-    OR = 296,                      /* OR  */
-    NOT = 297,                     /* NOT  */
-    LOWER_THAN_ELSE = 298          /* LOWER_THAN_ELSE  */
+    DIFF = 286,                    /* DIFF  */
+    PV = 287,                      /* PV  */
+    DEUXPTS = 288,                 /* DEUXPTS  */
+    VIRG = 289,                    /* VIRG  */
+    PARG = 290,                    /* PARG  */
+    PARD = 291,                    /* PARD  */
+    ACCOLG = 292,                  /* ACCOLG  */
+    ACCOLD = 293,                  /* ACCOLD  */
+    CROCHG = 294,                  /* CROCHG  */
+    CROCHD = 295,                  /* CROCHD  */
+    AND = 296,                     /* AND  */
+    OR = 297,                      /* OR  */
+    NOT = 298,                     /* NOT  */
+    LOWER_THAN_ELSE = 299          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -109,7 +110,7 @@ union YYSTYPE
     float reel;
     char* str;
 
-#line 113 "syntaxique.tab.h"
+#line 114 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

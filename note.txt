@@ -1,0 +1,16 @@
+{ENT_SIGNE} char temp[20]; // verifier pourquoi 20
+
+//void yyerror(char *s); porquoi on est obliger de le declarer
+
+char type_svg[20];
+char tmp_addr[10]; //why 
+
+%prec LOWER_THAN_ELSE // c quoi %prec 
+
+A=c/4 A=A+1; // ne s'arrete pas jusqua prochain ;
+
+ //DIVISION SUR UN ELEMENT DU Tableau (comment le recuperer)s
+
+
+
+VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }/* why str -1

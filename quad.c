@@ -51,19 +51,3 @@ void afficher_quads()
                quad_table[i].res);
     }
 }
-
-void set_loop_cond(int cond) {
-    if (loop_top >= 0) loop_cond[loop_top] = cond;
-}
-
-int pop_loop_start() {
-    if (loop_top < 0) return -1;
-    return loop_start[loop_top];
-}
-
-int pop_loop_cond() {
-    if (loop_top < 0) return -1;
-    int c = loop_cond[loop_top];
-    loop_top--; // On ne décrémente l'index de la pile qu'ici
-    return c;
-}

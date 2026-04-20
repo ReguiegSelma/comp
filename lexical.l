@@ -20,13 +20,16 @@ REEL_SIGNE   \([+-]{REEL}\)
 %%
 "//".* { nb_col += yyleng; }
 "/*"([^*]|\*+[^*/])*\*+"/" {  
-    for(int i=0; i<yyleng; i++) if(yytext[i]=='\n') nb_lignes++;
-    nb_col = 1;  
+    for(int i=0; i<yyleng; i++) {
+            if(yytext[i] == '\n') {
+            nb_lignes++;
+            nb_col = 1;
+        } else {
+            nb_col++;
+        }
+    } 
 }
 
-"&&" { inserer_sep("&&","SEP"); nb_col += yyleng; return AND; }
-"||" { inserer_sep("||","SEP"); nb_col += yyleng; return OR; }
-"!"  { inserer_sep("!","SEP"); nb_col += yyleng; return NOT; }
 "PROGRAM" { inserer_kw("PROGRAM", "KW"); nb_col += yyleng; return PROGRAM; }
 "DECL"    { inserer_kw("DECL", "KW"); nb_col += yyleng; return DECL; }
 "ENDDECL" { inserer_kw("ENDDECL", "KW"); nb_col += yyleng; return ENDDECL; }
@@ -51,6 +54,23 @@ REEL_SIGNE   \([+-]{REEL}\)
     return IDF; 
 }
 
+{ENTIER} { 
+    long val = atol(yytext);
+    if (val > 32767) {
+        printf("Erreur Lexicale: ligne %d, col %d, Valeur INTEGER hors limite (%s)\n", nb_lignes, nb_col, yytext);
+        nb_erreurs++;
+    }
+    yylval.entier= atoi(yytext);
+    nb_col += yyleng; 
+    return INT_VAL; 
+}                          
+
+{REEL} { 
+    yylval.reel = atof(yytext); 
+    nb_col += yyleng; 
+    return FLOAT_VAL; 
+    }
+
 {ENT_SIGNE} {
     char temp[20];
     strncpy(temp, yytext+1, yyleng-2); // enlever ()
@@ -71,18 +91,6 @@ REEL_SIGNE   \([+-]{REEL}\)
     return REEL_SIGNE;
 }
 
-{ENTIER} { 
-    long val = atol(yytext);
-    if (val > 32767) {
-        printf("Erreur Lexicale: ligne %d, col %d, Valeur INTEGER hors limite (%s)\n", nb_lignes, nb_col, yytext);
-        nb_erreurs++;
-    }
-    yylval.entier= atoi(yytext);
-    nb_col += yyleng; 
-    return INT_VAL; 
-}                          
-
-{REEL} { yylval.reel = atof(yytext); nb_col += yyleng; return FLOAT_VAL; }
 
 "+"    { inserer_sep("+", "SEP"); nb_col += yyleng; return PLUS; }
 "-"    { inserer_sep("-", "SEP"); nb_col += yyleng; return MOINS; }
@@ -94,6 +102,7 @@ REEL_SIGNE   \([+-]{REEL}\)
 ">="   { inserer_sep(">=", "SEP"); nb_col += yyleng; return SUPEG; }
 "<="   { inserer_sep("<=", "SEP"); nb_col += yyleng; return INFEG; }
 "=="   { inserer_sep("==", "SEP"); nb_col += yyleng; return EGAL; }
+"!="   { inserer_sep("!=", "SEP"); nb_col += yyleng; return DIFF; }
 ";"    { inserer_sep(";", "SEP"); nb_col += yyleng; return PV; }
 ":"    { inserer_sep(":", "SEP"); nb_col += yyleng; return DEUXPTS; }
 ","    { inserer_sep(",", "SEP"); nb_col += yyleng; return VIRG; }
@@ -103,6 +112,9 @@ REEL_SIGNE   \([+-]{REEL}\)
 "]"    { inserer_sep("]", "SEP"); nb_col += yyleng; return CROCHD; }
 "{"    { inserer_sep("{", "SEP"); nb_col += yyleng; return ACCOLG; }
 "}"    { inserer_sep("}", "SEP"); nb_col += yyleng; return ACCOLD; }
+"&&" { inserer_sep("&&","SEP"); nb_col += yyleng; return AND; }
+"||" { inserer_sep("||","SEP"); nb_col += yyleng; return OR; }
+"!"  { inserer_sep("!","SEP"); nb_col += yyleng; return NOT; }
 
 [ \t\r]+ { nb_col += yyleng; } 
 \n       { nb_lignes++; nb_col = 1; }
