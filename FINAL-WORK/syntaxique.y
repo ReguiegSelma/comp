@@ -89,7 +89,12 @@ VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
 
 INSTS: INST INSTS | ;
 INST: AFF| COND | BOUCLE | WRITE_I 
-    | error PV {yyerrok;};
+    | error PV { 
+        // On ne met PAS de yyerrok ici pour éviter les boucles infinies d'erreurs
+        printf("Erreur Syntaxique ligne %d: ';' manquant ou instruction mal formee\n", nb_lignes);
+        nb_erreurs++;
+      }
+    ;
       
 
 AFF: 
@@ -117,12 +122,12 @@ AFF:
             quad("=", $3, "", $1);
         }
     }
-/* --- Cas 2 : Erreur sur l'expression simple --- */
+/* --- Cas 2 : Erreur sur l'expression simple --- 
 | IDF AFFECT error PV {
         printf("Erreur Syntaxique: ligne %d, col %d expression invalide\n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
-    }
+    } */     
 
 /* --- Cas 3 : Affectation Tableau (t[i] = expr) --- */
     | IDF CROCHG expression CROCHD AFFECT expression PV { 
