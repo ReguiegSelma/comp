@@ -76,24 +76,19 @@
 #include "quad.h"
 
 extern int nb_lignes;
-extern int nb_erreurs;
+extern int nb_col;
 extern char* yytext;
-extern FILE *yyin;
+extern FILE *yyin; 
+extern int nb_erreurs;
 
+int fin_if, deb_else;
+void yyerror(char *s);
+int nb_erreurs = 0;
 int yylex();
-void yyerror(const char* s);
-
 char type_svg[20];
-char save_type[20];
-
-// Variables pour les quadruplets
-int fin_if = 0;
-int deb_else = 0;
-int loop_start = 0;
-int loop_cond = 0;
 char tmp_addr[10];
 
-#line 97 "syntaxique.tab.c"
+#line 92 "syntaxique.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -127,64 +122,71 @@ enum yysymbol_kind_t
   YYSYMBOL_IDF = 3,                        /* IDF  */
   YYSYMBOL_INT_VAL = 4,                    /* INT_VAL  */
   YYSYMBOL_FLOAT_VAL = 5,                  /* FLOAT_VAL  */
-  YYSYMBOL_PROGRAM = 6,                    /* PROGRAM  */
-  YYSYMBOL_DECL = 7,                       /* DECL  */
-  YYSYMBOL_ENDDECL = 8,                    /* ENDDECL  */
-  YYSYMBOL_BEGIN_P = 9,                    /* BEGIN_P  */
-  YYSYMBOL_END = 10,                       /* END  */
-  YYSYMBOL_INTEGER = 11,                   /* INTEGER  */
-  YYSYMBOL_FLOAT = 12,                     /* FLOAT  */
-  YYSYMBOL_CONST = 13,                     /* CONST  */
-  YYSYMBOL_IF = 14,                        /* IF  */
-  YYSYMBOL_ELSE = 15,                      /* ELSE  */
-  YYSYMBOL_FOR = 16,                       /* FOR  */
-  YYSYMBOL_WHILE = 17,                     /* WHILE  */
-  YYSYMBOL_WRITE = 18,                     /* WRITE  */
-  YYSYMBOL_PLUS = 19,                      /* PLUS  */
-  YYSYMBOL_MOINS = 20,                     /* MOINS  */
-  YYSYMBOL_MULT = 21,                      /* MULT  */
-  YYSYMBOL_DIV = 22,                       /* DIV  */
-  YYSYMBOL_AFFECT = 23,                    /* AFFECT  */
-  YYSYMBOL_SUP = 24,                       /* SUP  */
-  YYSYMBOL_INF = 25,                       /* INF  */
-  YYSYMBOL_EGAL = 26,                      /* EGAL  */
-  YYSYMBOL_PV = 27,                        /* PV  */
-  YYSYMBOL_DEUXPTS = 28,                   /* DEUXPTS  */
-  YYSYMBOL_VIRG = 29,                      /* VIRG  */
-  YYSYMBOL_PARG = 30,                      /* PARG  */
-  YYSYMBOL_PARD = 31,                      /* PARD  */
-  YYSYMBOL_ACCOLG = 32,                    /* ACCOLG  */
-  YYSYMBOL_ACCOLD = 33,                    /* ACCOLD  */
-  YYSYMBOL_CROCHG = 34,                    /* CROCHG  */
-  YYSYMBOL_CROCHD = 35,                    /* CROCHD  */
-  YYSYMBOL_AND = 36,                       /* AND  */
-  YYSYMBOL_OR = 37,                        /* OR  */
-  YYSYMBOL_NOT = 38,                       /* NOT  */
-  YYSYMBOL_LOWER_THAN_ELSE = 39,           /* LOWER_THAN_ELSE  */
-  YYSYMBOL_YYACCEPT = 40,                  /* $accept  */
-  YYSYMBOL_PROG = 41,                      /* PROG  */
-  YYSYMBOL_DECLS = 42,                     /* DECLS  */
-  YYSYMBOL_DEC = 43,                       /* DEC  */
-  YYSYMBOL_LISTE_OBJETS = 44,              /* LISTE_OBJETS  */
-  YYSYMBOL_OBJET = 45,                     /* OBJET  */
-  YYSYMBOL_VAL_CONST = 46,                 /* VAL_CONST  */
-  YYSYMBOL_TYPE = 47,                      /* TYPE  */
-  YYSYMBOL_INSTS = 48,                     /* INSTS  */
-  YYSYMBOL_INST = 49,                      /* INST  */
-  YYSYMBOL_AFF = 50,                       /* AFF  */
-  YYSYMBOL_expression = 51,                /* expression  */
-  YYSYMBOL_terme = 52,                     /* terme  */
-  YYSYMBOL_facteur = 53,                   /* facteur  */
-  YYSYMBOL_COND = 54,                      /* COND  */
-  YYSYMBOL_55_1 = 55,                      /* $@1  */
-  YYSYMBOL_ELSE_PART = 56,                 /* ELSE_PART  */
-  YYSYMBOL_57_2 = 57,                      /* $@2  */
-  YYSYMBOL_BOUCLE = 58,                    /* BOUCLE  */
-  YYSYMBOL_59_3 = 59,                      /* $@3  */
-  YYSYMBOL_60_4 = 60,                      /* $@4  */
-  YYSYMBOL_61_5 = 61,                      /* $@5  */
-  YYSYMBOL_EXPR_LOG = 62,                  /* EXPR_LOG  */
-  YYSYMBOL_WRITE_I = 63                    /* WRITE_I  */
+  YYSYMBOL_ENT_SIGNE = 6,                  /* ENT_SIGNE  */
+  YYSYMBOL_REEL_SIGNE = 7,                 /* REEL_SIGNE  */
+  YYSYMBOL_PROGRAM = 8,                    /* PROGRAM  */
+  YYSYMBOL_DECL = 9,                       /* DECL  */
+  YYSYMBOL_ENDDECL = 10,                   /* ENDDECL  */
+  YYSYMBOL_BEGIN_P = 11,                   /* BEGIN_P  */
+  YYSYMBOL_END = 12,                       /* END  */
+  YYSYMBOL_INTEGER = 13,                   /* INTEGER  */
+  YYSYMBOL_FLOAT = 14,                     /* FLOAT  */
+  YYSYMBOL_CONST = 15,                     /* CONST  */
+  YYSYMBOL_IF = 16,                        /* IF  */
+  YYSYMBOL_ELSE = 17,                      /* ELSE  */
+  YYSYMBOL_FOR = 18,                       /* FOR  */
+  YYSYMBOL_WHILE = 19,                     /* WHILE  */
+  YYSYMBOL_WRITE = 20,                     /* WRITE  */
+  YYSYMBOL_PLUS = 21,                      /* PLUS  */
+  YYSYMBOL_MOINS = 22,                     /* MOINS  */
+  YYSYMBOL_MULT = 23,                      /* MULT  */
+  YYSYMBOL_DIV = 24,                       /* DIV  */
+  YYSYMBOL_AFFECT = 25,                    /* AFFECT  */
+  YYSYMBOL_SUP = 26,                       /* SUP  */
+  YYSYMBOL_INF = 27,                       /* INF  */
+  YYSYMBOL_EGAL = 28,                      /* EGAL  */
+  YYSYMBOL_SUPEG = 29,                     /* SUPEG  */
+  YYSYMBOL_INFEG = 30,                     /* INFEG  */
+  YYSYMBOL_DIFF = 31,                      /* DIFF  */
+  YYSYMBOL_PV = 32,                        /* PV  */
+  YYSYMBOL_DEUXPTS = 33,                   /* DEUXPTS  */
+  YYSYMBOL_VIRG = 34,                      /* VIRG  */
+  YYSYMBOL_PARG = 35,                      /* PARG  */
+  YYSYMBOL_PARD = 36,                      /* PARD  */
+  YYSYMBOL_ACCOLG = 37,                    /* ACCOLG  */
+  YYSYMBOL_ACCOLD = 38,                    /* ACCOLD  */
+  YYSYMBOL_CROCHG = 39,                    /* CROCHG  */
+  YYSYMBOL_CROCHD = 40,                    /* CROCHD  */
+  YYSYMBOL_AND = 41,                       /* AND  */
+  YYSYMBOL_OR = 42,                        /* OR  */
+  YYSYMBOL_NOT = 43,                       /* NOT  */
+  YYSYMBOL_LOWER_THAN_ELSE = 44,           /* LOWER_THAN_ELSE  */
+  YYSYMBOL_YYACCEPT = 45,                  /* $accept  */
+  YYSYMBOL_PROG = 46,                      /* PROG  */
+  YYSYMBOL_DECLS = 47,                     /* DECLS  */
+  YYSYMBOL_DEC = 48,                       /* DEC  */
+  YYSYMBOL_TYPE = 49,                      /* TYPE  */
+  YYSYMBOL_LISTE_OBJETS = 50,              /* LISTE_OBJETS  */
+  YYSYMBOL_OBJET = 51,                     /* OBJET  */
+  YYSYMBOL_DEC_CONST = 52,                 /* DEC_CONST  */
+  YYSYMBOL_VAL_CONST = 53,                 /* VAL_CONST  */
+  YYSYMBOL_INSTS = 54,                     /* INSTS  */
+  YYSYMBOL_INST = 55,                      /* INST  */
+  YYSYMBOL_AFF = 56,                       /* AFF  */
+  YYSYMBOL_expression = 57,                /* expression  */
+  YYSYMBOL_terme = 58,                     /* terme  */
+  YYSYMBOL_facteur = 59,                   /* facteur  */
+  YYSYMBOL_COND = 60,                      /* COND  */
+  YYSYMBOL_61_1 = 61,                      /* $@1  */
+  YYSYMBOL_62_2 = 62,                      /* $@2  */
+  YYSYMBOL_ELSE_PART = 63,                 /* ELSE_PART  */
+  YYSYMBOL_64_3 = 64,                      /* $@3  */
+  YYSYMBOL_BOUCLE = 65,                    /* BOUCLE  */
+  YYSYMBOL_66_4 = 66,                      /* $@4  */
+  YYSYMBOL_67_5 = 67,                      /* $@5  */
+  YYSYMBOL_68_6 = 68,                      /* $@6  */
+  YYSYMBOL_EXPR_LOG = 69,                  /* EXPR_LOG  */
+  YYSYMBOL_WRITE_I = 70                    /* WRITE_I  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -512,19 +514,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  4
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   154
+#define YYLAST   235
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  40
+#define YYNTOKENS  45
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  24
+#define YYNNTS  26
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  53
+#define YYNRULES  67
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  130
+#define YYNSTATES  161
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   294
+#define YYMAXUTOK   299
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -567,19 +569,20 @@ static const yytype_int8 yytranslate[] =
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
-      35,    36,    37,    38,    39
+      35,    36,    37,    38,    39,    40,    41,    42,    43,    44
 };
 
 #if YYDEBUG
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint8 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
-       0,    53,    53,    63,    63,    65,    66,    70,    78,    78,
-      80,    81,    84,    85,    88,    89,    92,    92,    94,    95,
-      96,    97,    98,   106,   118,   134,   135,   136,   139,   140,
-     144,   147,   155,   160,   161,   162,   166,   165,   177,   176,
-     184,   188,   192,   187,   204,   203,   234,   235,   236,   237,
-     238,   239,   240,   243
+       0,    43,    43,    54,    55,    56,    58,    60,    61,    64,
+      65,    68,    71,    83,    85,    86,    87,    88,    90,    90,
+      91,    91,    91,    91,    92,    97,   121,   128,   174,   179,
+     186,   194,   202,   205,   213,   236,   240,   259,   293,   299,
+     302,   306,   309,   314,   317,   326,   325,   336,   335,   345,
+     344,   356,   359,   361,   359,   378,   377,   411,   412,   413,
+     414,   415,   416,   417,   418,   419,   420,   424
 };
 #endif
 
@@ -596,14 +599,15 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "IDF", "INT_VAL",
-  "FLOAT_VAL", "PROGRAM", "DECL", "ENDDECL", "BEGIN_P", "END", "INTEGER",
-  "FLOAT", "CONST", "IF", "ELSE", "FOR", "WHILE", "WRITE", "PLUS", "MOINS",
-  "MULT", "DIV", "AFFECT", "SUP", "INF", "EGAL", "PV", "DEUXPTS", "VIRG",
-  "PARG", "PARD", "ACCOLG", "ACCOLD", "CROCHG", "CROCHD", "AND", "OR",
-  "NOT", "LOWER_THAN_ELSE", "$accept", "PROG", "DECLS", "DEC",
-  "LISTE_OBJETS", "OBJET", "VAL_CONST", "TYPE", "INSTS", "INST", "AFF",
-  "expression", "terme", "facteur", "COND", "$@1", "ELSE_PART", "$@2",
-  "BOUCLE", "$@3", "$@4", "$@5", "EXPR_LOG", "WRITE_I", YY_NULLPTR
+  "FLOAT_VAL", "ENT_SIGNE", "REEL_SIGNE", "PROGRAM", "DECL", "ENDDECL",
+  "BEGIN_P", "END", "INTEGER", "FLOAT", "CONST", "IF", "ELSE", "FOR",
+  "WHILE", "WRITE", "PLUS", "MOINS", "MULT", "DIV", "AFFECT", "SUP", "INF",
+  "EGAL", "SUPEG", "INFEG", "DIFF", "PV", "DEUXPTS", "VIRG", "PARG",
+  "PARD", "ACCOLG", "ACCOLD", "CROCHG", "CROCHD", "AND", "OR", "NOT",
+  "LOWER_THAN_ELSE", "$accept", "PROG", "DECLS", "DEC", "TYPE",
+  "LISTE_OBJETS", "OBJET", "DEC_CONST", "VAL_CONST", "INSTS", "INST",
+  "AFF", "expression", "terme", "facteur", "COND", "$@1", "$@2",
+  "ELSE_PART", "$@3", "BOUCLE", "$@4", "$@5", "$@6", "EXPR_LOG", "WRITE_I", YY_NULLPTR
 };
 
 static const char *
@@ -613,12 +617,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-43)
+#define YYPACT_NINF (-45)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-18)
+#define YYTABLE_NINF (-20)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -627,19 +631,23 @@ yysymbol_name (yysymbol_kind_t yysymbol)
    STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-       5,    53,    13,    25,   -43,    54,    34,   -43,   -43,    60,
-      68,    54,    43,   -43,    50,    70,   -43,    92,    10,    71,
-      74,    82,    76,   -43,   -43,    83,    84,    -6,    85,    86,
-     -43,    87,   102,     9,    91,   -43,   -43,    93,   109,   -43,
-      92,   -43,   -43,    40,    40,     0,   111,    89,   118,   -43,
-     -43,   -43,   -43,    88,   -43,    90,   -43,   -43,    40,    78,
-      15,   -43,   -13,     0,     0,    58,    55,    94,     0,    95,
-     -43,    40,    29,    40,    40,    40,    40,   104,    33,    63,
-     -43,    40,    40,    40,   -43,     0,     0,   121,    65,   -43,
-     -11,   -43,    15,    15,   -43,   -43,    40,   -43,    78,    78,
-      78,    96,   -43,    97,   101,   -43,   -43,    78,    17,   126,
-      99,   103,   106,    17,   117,   131,   105,   -43,   -43,   108,
-     -43,   110,   -43,    17,   112,   107,    17,   -43,   113,   -43
+      56,     7,    16,    57,   -45,   124,   -45,   -45,    76,    90,
+     124,    80,   124,   110,   133,   -45,   118,   -45,   181,   131,
+     103,   116,   142,   -45,   -45,   -45,   -45,   120,   134,   -21,
+     144,   156,   -45,   157,   155,    43,   -45,   -45,   -45,   -45,
+     174,   -45,   118,   -45,   -45,    79,    89,     2,   190,   159,
+     192,   -45,   -45,   158,   -45,   164,   160,   -45,   -45,   -45,
+     -45,    98,    -2,    51,   -45,   161,    13,   166,    22,    35,
+     143,   139,   167,    35,   168,   -45,   -45,   105,   169,     0,
+       8,     8,   -45,     8,     8,   172,   178,   -45,   132,   141,
+     -45,     8,     8,     8,     8,     8,     8,   -45,    35,    35,
+     202,   148,   175,   170,    96,   -45,   -45,    51,    51,   -45,
+     -45,     8,   122,   171,   -45,    10,    10,    10,    10,    10,
+      10,   176,   -45,   173,   179,   -45,   -45,   -45,   -45,    55,
+     177,   109,    53,    53,   207,   180,   -45,   -45,   -45,   182,
+     183,   185,    53,   198,   198,   212,   184,   -45,   -45,   -45,
+     187,   -45,   188,   -45,    53,   189,   186,    53,   -45,   191,
+     -45
 };
 
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -647,35 +655,39 @@ static const yytype_int16 yypact[] =
    means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       0,     0,     0,     0,     1,     0,     0,    14,    15,     0,
-       0,     0,     0,     7,     0,     0,     3,     0,     0,     0,
-      10,     0,     9,    12,    13,     0,     0,     0,     0,     0,
-      41,     0,     0,     0,     0,    19,    20,     0,     0,     5,
-       0,     6,    22,     0,     0,     0,     0,     0,     0,     2,
-      16,    18,    21,     0,     8,    31,    33,    34,     0,    23,
-      27,    30,     0,     0,     0,     0,     0,     0,     0,     0,
-      11,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      48,     0,     0,     0,    36,     0,     0,     0,     0,    53,
-       0,    35,    25,    26,    28,    29,     0,    52,    49,    50,
-      51,     0,    47,    46,     0,    42,    32,    24,     0,     0,
-       0,     0,     0,     0,    40,     0,     0,    38,    37,     0,
-      43,     0,    44,     0,     0,     0,     0,    39,     0,    45
+       0,     0,     0,     0,     1,     5,     7,     8,     0,     0,
+       5,     0,     5,     0,     0,     3,     0,     4,     0,     0,
+      11,     0,    10,    14,    15,    16,    17,     0,     0,     0,
+       0,     0,    52,     0,     0,     0,    20,    21,    22,    23,
+       0,     6,     0,    13,    24,     0,     0,     0,     0,     0,
+       0,     2,    18,     0,     9,     0,    36,    39,    40,    41,
+      42,     0,     0,    32,    35,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    12,    26,     0,     0,     0,
+       0,     0,    25,     0,     0,     0,     0,    47,     0,     0,
+      59,     0,     0,     0,     0,     0,     0,    45,     0,     0,
+       0,     0,     0,     0,     0,    44,    43,    30,    31,    33,
+      34,     0,     0,     0,    66,    60,    61,    65,    62,    63,
+      64,     0,    58,    57,     0,    53,    67,    38,    37,     0,
+       0,     0,     0,     0,     0,     0,    28,    29,    27,     0,
+       0,     0,     0,    51,    51,     0,     0,    49,    48,    46,
+       0,    54,     0,    55,     0,     0,     0,     0,    50,     0,
+      56
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-     -43,   -43,   130,   -43,   114,   -43,   -43,   -43,   -33,   -43,
-     -43,   -42,    30,    31,   -43,   -43,   -43,   -43,   -43,   -43,
-     -43,   -43,   -17,   -43
+     -45,   -45,    48,   -45,   -45,   193,   -45,   -45,   -45,   -35,
+     -45,   -45,   -44,    75,     5,   -45,   -45,   -45,    83,   -45,
+     -45,   -45,   -45,   -45,    47,   -45
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int8 yydefgoto[] =
+static const yytype_uint8 yydefgoto[] =
 {
-       0,     2,    10,    11,    21,    22,    25,    12,    32,    33,
-      34,    65,    60,    61,    35,   101,   118,   121,    36,    47,
-     110,   124,    66,    37
+       0,     2,     9,    10,    11,    21,    22,    12,    27,    34,
+      35,    36,    70,    63,    64,    37,   121,   113,   148,   152,
+      38,    49,   135,   155,    71,    39
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -683,83 +695,105 @@ static const yytype_int8 yydefgoto[] =
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-      50,    59,    62,    55,    56,    57,    73,    74,    73,    74,
-      26,     1,    27,     4,    23,    24,    72,    43,    26,   -17,
-      27,    78,    77,    28,   106,    29,    30,    31,    44,    90,
-      63,    28,     5,    29,    30,    31,    75,    76,    64,    98,
-      99,   100,   -17,    55,    56,    57,    79,    80,    73,    74,
-     -17,    88,    73,    74,   107,     6,     3,    81,    82,    83,
-      91,    13,    -4,    14,    91,     7,     8,     9,   102,   103,
-      58,    17,    26,    18,    27,   111,    15,    73,    74,    19,
-     116,   -17,    81,    82,    83,    28,    84,    29,    30,    31,
-     125,    85,    86,   128,    97,    20,   105,    73,    74,    85,
-      86,    85,    86,    92,    93,    40,    94,    95,    38,    39,
-      41,    42,    49,    53,    67,    45,    46,    48,    51,    68,
-      52,    69,    87,    70,    71,   104,    89,    96,   108,   109,
-     112,   113,   117,    85,   115,   119,   114,     0,   120,   122,
-     127,    16,   123,     0,   126,     0,   129,     0,     0,     0,
-       0,     0,     0,     0,    54
+      52,    62,    66,    67,    45,    56,    57,    58,    59,    60,
+       3,    56,    57,    58,    59,    60,     4,    79,    46,    80,
+      81,    80,    81,    78,    88,    56,    57,    58,    59,    60,
+      82,    80,    81,   104,    80,    81,   106,    68,    56,    57,
+      58,    59,    60,    61,    28,    69,    29,   115,   116,   117,
+     118,   119,   120,    86,    28,   -19,    29,    68,    15,    30,
+      17,    31,    32,    33,     1,    69,     5,   129,   131,    30,
+      68,    31,    32,    33,    83,    84,    80,    81,    69,    13,
+      55,   -19,    56,    57,    58,    59,    60,   136,   109,   110,
+      65,   -19,    56,    57,    58,    59,    60,   139,   140,    78,
+      14,    56,    57,    58,    59,    60,   103,   146,    56,    57,
+      58,    59,    60,    16,    61,    89,    90,    80,    81,   156,
+     101,    20,   159,   130,    61,    56,    57,    58,    59,    60,
+      80,    81,    28,    61,    29,    18,   128,     6,     7,     8,
+      61,   138,    40,   -19,    19,   122,   123,    30,    41,    31,
+      32,    33,    43,    80,    81,   107,   108,    61,    91,    92,
+      93,    94,    95,    96,    80,    81,    44,    51,   106,    91,
+      92,    93,    94,    95,    96,    97,    42,   114,    53,    47,
+      98,    99,    98,    99,   125,    23,    24,    25,    26,    98,
+      99,    48,    50,    72,    73,    74,    76,   111,    75,    77,
+     100,    85,    87,   112,   102,   105,   124,   126,   132,   137,
+     127,   141,   134,   133,    98,   147,   150,   142,   145,     0,
+     143,   144,   151,   153,   158,   154,   157,   149,     0,   160,
+       0,     0,     0,     0,     0,    54
 };
 
-static const yytype_int8 yycheck[] =
+static const yytype_int16 yycheck[] =
 {
-      33,    43,    44,     3,     4,     5,    19,    20,    19,    20,
-       1,     6,     3,     0,     4,     5,    58,    23,     1,    10,
-       3,    63,    35,    14,    35,    16,    17,    18,    34,    71,
-      30,    14,     7,    16,    17,    18,    21,    22,    38,    81,
-      82,    83,    33,     3,     4,     5,    63,    64,    19,    20,
-      33,    68,    19,    20,    96,     1,     3,    24,    25,    26,
-      31,    27,     8,     3,    31,    11,    12,    13,    85,    86,
-      30,    28,     1,    23,     3,   108,     8,    19,    20,     9,
-     113,    10,    24,    25,    26,    14,    31,    16,    17,    18,
-     123,    36,    37,   126,    31,     3,    31,    19,    20,    36,
-      37,    36,    37,    73,    74,    29,    75,    76,    34,    27,
-      27,    27,    10,     4,     3,    30,    30,    30,    27,    30,
-      27,     3,    28,    35,    34,     4,    31,    23,    32,    28,
-       4,    32,    15,    36,    28,     4,    33,    -1,    33,    31,
-      33,    11,    32,    -1,    32,    -1,    33,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    40
+      35,    45,    46,     1,    25,     3,     4,     5,     6,     7,
+       3,     3,     4,     5,     6,     7,     0,    61,    39,    21,
+      22,    21,    22,     1,    68,     3,     4,     5,     6,     7,
+      32,    21,    22,    77,    21,    22,    36,    35,     3,     4,
+       5,     6,     7,    35,     1,    43,     3,    91,    92,    93,
+      94,    95,    96,    40,     1,    12,     3,    35,    10,    16,
+      12,    18,    19,    20,     8,    43,     9,   111,   112,    16,
+      35,    18,    19,    20,    23,    24,    21,    22,    43,     3,
+       1,    38,     3,     4,     5,     6,     7,    32,    83,    84,
+       1,    38,     3,     4,     5,     6,     7,   132,   133,     1,
+      10,     3,     4,     5,     6,     7,     1,   142,     3,     4,
+       5,     6,     7,    33,    35,    68,    69,    21,    22,   154,
+      73,     3,   157,     1,    35,     3,     4,     5,     6,     7,
+      21,    22,     1,    35,     3,    25,    40,    13,    14,    15,
+      35,    32,    39,    12,    11,    98,    99,    16,    32,    18,
+      19,    20,    32,    21,    22,    80,    81,    35,    26,    27,
+      28,    29,    30,    31,    21,    22,    32,    12,    36,    26,
+      27,    28,    29,    30,    31,    36,    34,    36,     4,    35,
+      41,    42,    41,    42,    36,     4,     5,     6,     7,    41,
+      42,    35,    35,     3,    35,     3,    32,    25,    40,    39,
+      33,    40,    36,    25,    36,    36,     4,    32,    37,    32,
+      40,     4,    33,    37,    41,    17,     4,    37,    33,    -1,
+      38,    38,    38,    36,    38,    37,    37,   144,    -1,    38,
+      -1,    -1,    -1,    -1,    -1,    42
 };
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,     6,    41,     3,     0,     7,     1,    11,    12,    13,
-      42,    43,    47,    27,     3,     8,    42,    28,    23,     9,
-       3,    44,    45,     4,     5,    46,     1,     3,    14,    16,
-      17,    18,    48,    49,    50,    54,    58,    63,    34,    27,
-      29,    27,    27,    23,    34,    30,    30,    59,    30,    10,
-      48,    27,    27,     4,    44,     3,     4,     5,    30,    51,
-      52,    53,    51,    30,    38,    51,    62,     3,    30,     3,
-      35,    34,    51,    19,    20,    21,    22,    35,    51,    62,
-      62,    24,    25,    26,    31,    36,    37,    28,    62,    31,
-      51,    31,    52,    52,    53,    53,    23,    31,    51,    51,
-      51,    55,    62,    62,     4,    31,    35,    51,    32,    28,
-      60,    48,     4,    32,    33,    28,    48,    15,    56,     4,
-      33,    57,    31,    32,    61,    48,    32,    33,    48,    33
+       0,     8,    46,     3,     0,     9,    13,    14,    15,    47,
+      48,    49,    52,     3,    10,    47,    33,    47,    25,    11,
+       3,    50,    51,     4,     5,     6,     7,    53,     1,     3,
+      16,    18,    19,    20,    54,    55,    56,    60,    65,    70,
+      39,    32,    34,    32,    32,    25,    39,    35,    35,    66,
+      35,    12,    54,     4,    50,     1,     3,     4,     5,     6,
+       7,    35,    57,    58,    59,     1,    57,     1,    35,    43,
+      57,    69,     3,    35,     3,    40,    32,    39,     1,    57,
+      21,    22,    32,    23,    24,    40,    40,    36,    57,    69,
+      69,    26,    27,    28,    29,    30,    31,    36,    41,    42,
+      33,    69,    36,     1,    57,    36,    36,    58,    58,    59,
+      59,    25,    25,    62,    36,    57,    57,    57,    57,    57,
+      57,    61,    69,    69,     4,    36,    32,    40,    40,    57,
+       1,    57,    37,    37,    33,    67,    32,    32,    32,    54,
+      54,     4,    37,    38,    38,    33,    54,    17,    63,    63,
+       4,    38,    64,    36,    37,    68,    54,    37,    38,    54,
+      38
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    40,    41,    42,    42,    43,    43,    43,    44,    44,
-      45,    45,    46,    46,    47,    47,    48,    48,    49,    49,
-      49,    49,    49,    50,    50,    51,    51,    51,    52,    52,
-      52,    53,    53,    53,    53,    53,    55,    54,    57,    56,
-      56,    59,    60,    58,    61,    58,    62,    62,    62,    62,
-      62,    62,    62,    63
+       0,    45,    46,    47,    47,    47,    48,    49,    49,    50,
+      50,    51,    51,    52,    53,    53,    53,    53,    54,    54,
+      55,    55,    55,    55,    55,    56,    56,    56,    56,    56,
+      57,    57,    57,    58,    58,    58,    59,    59,    59,    59,
+      59,    59,    59,    59,    59,    61,    60,    62,    60,    64,
+      63,    63,    66,    67,    65,    68,    65,    69,    69,    69,
+      69,    69,    69,    69,    69,    69,    69,    70
 };
 
 /* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
 static const yytype_int8 yyr2[] =
 {
-       0,     2,     8,     2,     0,     4,     5,     2,     3,     1,
-       1,     4,     1,     1,     1,     1,     2,     0,     2,     1,
-       1,     2,     2,     3,     6,     3,     3,     1,     3,     3,
-       1,     1,     4,     1,     1,     3,     0,     9,     0,     5,
-       0,     0,     0,     9,     0,    14,     3,     3,     2,     3,
-       3,     3,     3,     4
+       0,     2,     8,     2,     2,     0,     4,     1,     1,     3,
+       1,     1,     4,     5,     1,     1,     1,     1,     2,     0,
+       1,     1,     1,     1,     2,     4,     4,     7,     7,     7,
+       3,     3,     1,     3,     3,     1,     1,     4,     4,     1,
+       1,     1,     1,     3,     3,     0,     9,     0,     9,     0,
+       5,     0,     0,     0,     9,     0,    14,     3,     3,     2,
+       3,     3,     3,     3,     3,     3,     3,     5
 };
 
 
@@ -1223,348 +1257,583 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END  */
-#line 54 "syntaxique.y"
+#line 44 "syntaxique.y"
       {      
         if(nb_erreurs == 0){
             printf("Syntaxe Correcte\n");
             afficher_quads();
+            YYACCEPT;
         }else{
-            printf("\nCompilation echouee : %d erreur(s)\n", nb_erreurs);
+            printf("\n Compilation echouee : %d erreur(s) detectee(s)\n", nb_erreurs);
         }
       }
-#line 1236 "syntaxique.tab.c"
+#line 1271 "syntaxique.tab.c"
     break;
 
-  case 6: /* DEC: CONST IDF AFFECT VAL_CONST PV  */
-#line 67 "syntaxique.y"
-     { 
-        insert_idf_cst((yyvsp[-3].str), "CONST", type_svg, (yyvsp[-1].float_val), 0, 0, 1);
-     }
-#line 1244 "syntaxique.tab.c"
-    break;
-
-  case 7: /* DEC: error PV  */
-#line 71 "syntaxique.y"
-      {
-          printf("Erreur Syntaxique: ligne %d\n", nb_lignes);
-          nb_erreurs++;
-          yyerrok;
-      }
-#line 1254 "syntaxique.tab.c"
-    break;
-
-  case 10: /* OBJET: IDF  */
-#line 80 "syntaxique.y"
-           { insert_idf_cst((yyvsp[0].str), "VAR", type_svg, 0, 0, 0, 0); }
-#line 1260 "syntaxique.tab.c"
-    break;
-
-  case 11: /* OBJET: IDF CROCHG INT_VAL CROCHD  */
-#line 81 "syntaxique.y"
-                                 { insert_idf_cst((yyvsp[-3].str), "TAB", type_svg, 0, 1, (yyvsp[-1].integer), 0); }
-#line 1266 "syntaxique.tab.c"
-    break;
-
-  case 12: /* VAL_CONST: INT_VAL  */
-#line 84 "syntaxique.y"
-                   { (yyval.float_val) = (float)(yyvsp[0].integer); }
-#line 1272 "syntaxique.tab.c"
-    break;
-
-  case 13: /* VAL_CONST: FLOAT_VAL  */
-#line 85 "syntaxique.y"
-                     { (yyval.float_val) = (yyvsp[0].float_val); }
-#line 1278 "syntaxique.tab.c"
-    break;
-
-  case 14: /* TYPE: INTEGER  */
-#line 88 "syntaxique.y"
+  case 7: /* TYPE: INTEGER  */
+#line 60 "syntaxique.y"
               { strcpy(type_svg, "INTEGER"); }
-#line 1284 "syntaxique.tab.c"
+#line 1277 "syntaxique.tab.c"
     break;
 
-  case 15: /* TYPE: FLOAT  */
-#line 89 "syntaxique.y"
-            { strcpy(type_svg, "FLOAT"); }
-#line 1290 "syntaxique.tab.c"
+  case 8: /* TYPE: FLOAT  */
+#line 61 "syntaxique.y"
+              { strcpy(type_svg, "FLOAT"); }
+#line 1283 "syntaxique.tab.c"
     break;
 
-  case 22: /* INST: error PV  */
-#line 99 "syntaxique.y"
-      {
-          printf("Erreur Syntaxique: ligne %d\n", nb_lignes);
-          nb_erreurs++;
-          yyerrok;
-      }
-#line 1300 "syntaxique.tab.c"
+  case 11: /* OBJET: IDF  */
+#line 68 "syntaxique.y"
+           { 
+        inserer((yyvsp[0].str), "idf", type_svg, 0, 0); 
+     }
+#line 1291 "syntaxique.tab.c"
     break;
 
-  case 23: /* AFF: IDF AFFECT expression  */
-#line 106 "syntaxique.y"
-                           { 
-    int idx = search_idf_cst((yyvsp[-2].str));
-    if(idx == -1) {
-        printf("Erreur Semantique: ligne %d '%s' non declare\n", nb_lignes, (yyvsp[-2].str));
-        nb_erreurs++;
-    } else if(ts_idf_cst[idx].estConstante) {
-        printf("Erreur Semantique: ligne %d, Modif constante '%s'\n", nb_lignes, (yyvsp[-2].str));
-        nb_erreurs++;
-    } else {
-        quad("=", (yyvsp[0].str), "", (yyvsp[-2].str));
+  case 12: /* OBJET: IDF CROCHG INT_VAL CROCHD  */
+#line 71 "syntaxique.y"
+                                 { 
+        // VERIFICATION : La taille du tableau doit être > 0
+        if ((yyvsp[-1].entier) <= 0) {
+            printf("Erreur Semantique ligne %d: La taille du tableau '%s' doit etre positive (donnee: %d)\n", 
+                    nb_lignes, (yyvsp[-3].str), (yyvsp[-1].entier));
+            nb_erreurs++;
+            yyerrok; 
+        } else {
+            inserer((yyvsp[-3].str), "tab", type_svg, 0, (yyvsp[-1].entier)); 
+        }
+     }
+#line 1307 "syntaxique.tab.c"
+    break;
+
+  case 14: /* VAL_CONST: INT_VAL  */
+#line 85 "syntaxique.y"
+                      { inserer((yyvsp[(-1) - (1)].str), "cst", "INTEGER", (float)(yyvsp[0].entier), 0); }
+#line 1313 "syntaxique.tab.c"
+    break;
+
+  case 15: /* VAL_CONST: FLOAT_VAL  */
+#line 86 "syntaxique.y"
+                      { inserer((yyvsp[(-1) - (1)].str), "cst", "FLOAT", (yyvsp[0].reel), 0); }
+#line 1319 "syntaxique.tab.c"
+    break;
+
+  case 16: /* VAL_CONST: ENT_SIGNE  */
+#line 87 "syntaxique.y"
+                      { inserer((yyvsp[(-1) - (1)].str), "cst", "INTEGER", (float)(yyvsp[0].entier), 0); }
+#line 1325 "syntaxique.tab.c"
+    break;
+
+  case 17: /* VAL_CONST: REEL_SIGNE  */
+#line 88 "syntaxique.y"
+                      { inserer((yyvsp[(-1) - (1)].str), "cst", "FLOAT", (yyvsp[0].reel), 0); }
+#line 1331 "syntaxique.tab.c"
+    break;
+
+  case 24: /* INST: error PV  */
+#line 92 "syntaxique.y"
+               {yyerrok;}
+#line 1337 "syntaxique.tab.c"
+    break;
+
+  case 25: /* AFF: IDF AFFECT expression PV  */
+#line 97 "syntaxique.y"
+                             {
+        Symbole* s1 = rechercher((yyvsp[-3].str));
+        if (s1 == NULL) {
+            printf("Erreur Semantique ligne %d: Variable '%s' non declaree\n", nb_lignes, (yyvsp[-3].str));
+            nb_erreurs++;
+            yyerrok;
+        } else if (strcmp(s1->code, "cst") == 0) {
+            printf("Erreur Semantique ligne %d: Modification de la constante '%s'\n", nb_lignes, (yyvsp[-3].str));
+            nb_erreurs++;
+            yyerrok;
+        } else {
+            // Vérification de type si l'expression est une variable
+            Symbole* s3 = rechercher((yyvsp[-1].str));
+            if (s3 != NULL) {
+                if (strcmp(s1->type, s3->type) != 0) {
+                    printf("Erreur Semantique ligne %d: Incompatibilite de type entre %s et %s\n", nb_lignes, (yyvsp[-3].str), (yyvsp[-1].str));
+                    nb_erreurs++;
+                    yyerrok;
+                }
+            }
+            quad("=", (yyvsp[-1].str), "", (yyvsp[-3].str));
+        }
     }
-}
-#line 1317 "syntaxique.tab.c"
+#line 1365 "syntaxique.tab.c"
     break;
 
-  case 24: /* AFF: IDF CROCHG expression CROCHD AFFECT expression  */
-#line 118 "syntaxique.y"
-                                                    {
-    int idx = search_idf_cst((yyvsp[-5].str));
-    if(idx == -1) {
-        printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, (yyvsp[-5].str));
+  case 26: /* AFF: IDF AFFECT error PV  */
+#line 121 "syntaxique.y"
+                      {
+        printf("Erreur Syntaxique: ligne %d, col %d expression invalide\n", nb_lignes, nb_col);
         nb_erreurs++;
-    } else if(!ts_idf_cst[idx].estTableau) {
-        printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, (yyvsp[-5].str));
-        nb_erreurs++;
-    } else {
-        char res[30]; 
-        sprintf(res, "%s[%s]", (yyvsp[-5].str), (yyvsp[-3].str));
-        quad("=", (yyvsp[0].str), "", res);
+        yyerrok;
     }
-   }
-#line 1336 "syntaxique.tab.c"
-    break;
-
-  case 25: /* expression: expression PLUS terme  */
-#line 134 "syntaxique.y"
-                                  { (yyval.str) = new_temp(); quad("+", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1342 "syntaxique.tab.c"
-    break;
-
-  case 26: /* expression: expression MOINS terme  */
-#line 135 "syntaxique.y"
-                                   { (yyval.str) = new_temp(); quad("-", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1348 "syntaxique.tab.c"
-    break;
-
-  case 27: /* expression: terme  */
-#line 136 "syntaxique.y"
-                  { (yyval.str) = (yyvsp[0].str); }
-#line 1354 "syntaxique.tab.c"
-    break;
-
-  case 28: /* terme: terme MULT facteur  */
-#line 139 "syntaxique.y"
-                          { (yyval.str) = new_temp(); quad("*", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1360 "syntaxique.tab.c"
-    break;
-
-  case 29: /* terme: terme DIV facteur  */
-#line 140 "syntaxique.y"
-                         { 
-        (yyval.str) = new_temp(); 
-        quad("/", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str));
-       }
-#line 1369 "syntaxique.tab.c"
-    break;
-
-  case 30: /* terme: facteur  */
-#line 144 "syntaxique.y"
-               { (yyval.str) = (yyvsp[0].str); }
 #line 1375 "syntaxique.tab.c"
     break;
 
-  case 31: /* facteur: IDF  */
-#line 147 "syntaxique.y"
-             { 
-            int idx = search_idf_cst((yyvsp[0].str));
-            if(idx == -1) {
-                printf("Erreur Semantique: ligne %d: variable '%s' non declaree\n", nb_lignes, (yyvsp[0].str));
+  case 27: /* AFF: IDF CROCHG expression CROCHD AFFECT expression PV  */
+#line 128 "syntaxique.y"
+                                                        { 
+        Symbole* p = rechercher((yyvsp[-6].str));     // Recherche du tableau
+        Symbole* p_idx = rechercher((yyvsp[-4].str)); // Recherche si l'indice est une variable
+        Symbole* p_src = rechercher((yyvsp[-1].str)); // Recherche si la source est une variable
+
+        if(p == NULL) {
+            printf("Erreur Semantique ligne %d: tableau '%s' non declare\n", nb_lignes, (yyvsp[-6].str));
+            nb_erreurs++;
+            yyerrok;
+        } 
+        else {
+            // 1. Vérifier si c'est bien un tableau
+            if(strcmp(p->code, "tab") != 0) {
+                printf("Erreur Semantique ligne %d: '%s' n'est pas un tableau\n", nb_lignes, (yyvsp[-6].str));
                 nb_erreurs++;
+                yyerrok;
+            } 
+            
+            // 2. Vérification de la borne (si l'indice est un nombre constant)
+            // On convertit le texte de l'indice en entier pour comparer
+            int val_index = atoi((yyvsp[-4].str)); 
+            if (p_idx == NULL && (val_index >= p->taille || val_index < 0)) {
+                printf("Erreur Semantique ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
+                        nb_lignes, val_index, (yyvsp[-6].str), p->taille);
+                nb_erreurs++;
+                yyerrok;
             }
-            (yyval.str) = (yyvsp[0].str); 
-         }
-#line 1388 "syntaxique.tab.c"
+
+            // 3. Vérification des types
+            if (p_src != NULL) {
+                if (strcmp(p->type, p_src->type) != 0) {
+                    printf("Erreur Semantique ligne %d: incompatibilite de type entre le tableau %s et %s\n", 
+                            nb_lignes, (yyvsp[-6].str), (yyvsp[-1].str));
+                    nb_erreurs++;
+                    yyerrok;
+                }
+            }
+
+            // 4. Génération du quadruplet
+            char res[40];
+            sprintf(res, "%s[%s]", (yyvsp[-6].str), (yyvsp[-4].str));
+            quad("=", (yyvsp[-1].str), "", res);
+        }
+    }
+#line 1424 "syntaxique.tab.c"
     break;
 
-  case 32: /* facteur: IDF CROCHG expression CROCHD  */
-#line 155 "syntaxique.y"
-                                      { 
-            char* t = malloc(30); 
-            sprintf(t, "%s[%s]", (yyvsp[-3].str), (yyvsp[-1].str)); 
-            (yyval.str) = t; 
-         }
-#line 1398 "syntaxique.tab.c"
+  case 28: /* AFF: IDF CROCHG error CROCHD AFFECT expression PV  */
+#line 174 "syntaxique.y"
+                                                  {
+        printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+     }
+#line 1434 "syntaxique.tab.c"
     break;
 
-  case 33: /* facteur: INT_VAL  */
-#line 160 "syntaxique.y"
-                 { char* t=malloc(20); sprintf(t,"%d",(yyvsp[0].integer)); (yyval.str)=t; }
-#line 1404 "syntaxique.tab.c"
+  case 29: /* AFF: IDF CROCHG expression CROCHD AFFECT error PV  */
+#line 179 "syntaxique.y"
+                                                  {
+        printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+     }
+#line 1444 "syntaxique.tab.c"
     break;
 
-  case 34: /* facteur: FLOAT_VAL  */
-#line 161 "syntaxique.y"
-                   { char* t=malloc(20); sprintf(t,"%f",(yyvsp[0].float_val)); (yyval.str)=t; }
-#line 1410 "syntaxique.tab.c"
+  case 30: /* expression: expression PLUS terme  */
+#line 186 "syntaxique.y"
+                                  { 
+                if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
+                    (yyval.str) = strdup("empty");
+                } else {
+                    (yyval.str) = new_temp(); 
+                    quad("+", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
+                }
+            }
+#line 1457 "syntaxique.tab.c"
     break;
 
-  case 35: /* facteur: PARG expression PARD  */
-#line 162 "syntaxique.y"
-                              { (yyval.str) = (yyvsp[-1].str); }
-#line 1416 "syntaxique.tab.c"
+  case 31: /* expression: expression MOINS terme  */
+#line 194 "syntaxique.y"
+                                   { 
+                if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
+                    (yyval.str) = strdup("empty");
+                } else {
+                    (yyval.str) = new_temp(); 
+                    quad("-", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
+                }
+            }
+#line 1470 "syntaxique.tab.c"
     break;
 
-  case 36: /* $@1: %empty  */
-#line 166 "syntaxique.y"
+  case 32: /* expression: terme  */
+#line 202 "syntaxique.y"
+        { (yyval.str) = (yyvsp[0].str); }
+#line 1476 "syntaxique.tab.c"
+    break;
+
+  case 33: /* terme: terme MULT facteur  */
+#line 205 "syntaxique.y"
+                          { 
+            if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
+                (yyval.str) = strdup("empty");
+            } else {
+                (yyval.str) = new_temp(); 
+                quad("*", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
+            }
+        }
+#line 1489 "syntaxique.tab.c"
+    break;
+
+  case 34: /* terme: terme DIV facteur  */
+#line 213 "syntaxique.y"
+                    { 
+            Symbole* s=rechercher((yyvsp[0].str));
+            if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
+                (yyval.str) = strdup("empty");
+            } else {
+                // Ta vérification de division par zéro
+                if (strcmp((yyvsp[0].str), "0") == 0 || strcmp((yyvsp[0].str), "0.00") == 0) {
+                    printf("Erreur Semantique ligne %d: Division par zero !\n", nb_lignes);
+                    nb_erreurs++;
+                    yyerrok;
+                    (yyval.str) = strdup("empty");
+                } else {
+                    if (s->val == 0) {
+                        printf("Erreur Semantique: variable ligne %d: DDivision par zero !\n", nb_lignes);
+                        nb_erreurs++;
+                        yyerrok;
+                        (yyval.str) = strdup("empty");
+            }
+            else{
+                    (yyval.str) = new_temp(); 
+                    quad("/", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
+                }
+        }}}
+#line 1517 "syntaxique.tab.c"
+    break;
+
+  case 35: /* terme: facteur  */
+#line 236 "syntaxique.y"
+               { (yyval.str) = (yyvsp[0].str); }
+#line 1523 "syntaxique.tab.c"
+    break;
+
+  case 36: /* facteur: IDF  */
+#line 240 "syntaxique.y"
+        { 
+        Symbole* s = rechercher((yyvsp[0].str));
+        if (s == NULL) {
+            printf("Erreur Semantique: variable '%s' non declaree ligne %d\n", (yyvsp[0].str), nb_lignes);
+            nb_erreurs++;
+            yyerrok;
+            (yyval.str) = strdup("empty");
+        } else {
+            if (strcmp(s->code, "tab") == 0) {
+                printf("Erreur Semantique: '%s' est un tableau, index requis ligne %d\n", (yyvsp[0].str), nb_lignes);
+                nb_erreurs++;
+                yyerrok;
+                (yyval.str) = strdup("empty");
+            } else {
+                (yyval.str) = strdup((yyvsp[0].str));
+            }
+        }
+    }
+#line 1546 "syntaxique.tab.c"
+    break;
+
+  case 37: /* facteur: IDF CROCHG expression CROCHD  */
+#line 259 "syntaxique.y"
+                                   { 
+        Symbole* s = rechercher((yyvsp[-3].str));
+        if (s == NULL) {
+            printf("Erreur Semantique: ligne %d: tableau '%s' non declare\n", nb_lignes, (yyvsp[-3].str));
+            nb_erreurs++; 
+            yyerrok;
+            (yyval.str) = strdup("empty");
+        } else {
+            if (strcmp(s->code, "tab") != 0) {
+                printf("Erreur Semantique: ligne %d: '%s' n'est pas un tableau\n", nb_lignes, (yyvsp[-3].str));
+                nb_erreurs++;
+                yyerrok;
+                (yyval.str) = strdup("empty");
+            } else {
+                // Si l'index est valide (pas empty), on vérifie la borne statiquement
+                if (strcmp((yyvsp[-1].str), "empty") != 0) {
+                    // Si l'expression d'index est un nombre direct (pas une variable)
+                    if (rechercher((yyvsp[-1].str)) == NULL) {
+                        int val_index = atoi((yyvsp[-1].str));
+                        if (val_index >= s->taille || val_index < 0) {
+                            printf("Erreur Semantique: ligne %d: index %d hors limites pour '%s' (taille %d)\n", 
+                                    nb_lignes, val_index, (yyvsp[-3].str), s->taille);
+                            nb_erreurs++;
+                            yyerrok;
+                        }
+                    }
+                }
+                char* t = malloc(50);
+                sprintf(t, "%s[%s]", (yyvsp[-3].str), (yyvsp[-1].str));
+                (yyval.str) = t; 
+            }
+        }
+    }
+#line 1584 "syntaxique.tab.c"
+    break;
+
+  case 38: /* facteur: IDF CROCHG error CROCHD  */
+#line 293 "syntaxique.y"
+                              {
+        printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+        (yyval.str) = strdup("empty");
+    }
+#line 1595 "syntaxique.tab.c"
+    break;
+
+  case 39: /* facteur: INT_VAL  */
+#line 299 "syntaxique.y"
+              { 
+        char b[20]; sprintf(b, "%d", (yyvsp[0].entier)); (yyval.str) = strdup(b); 
+    }
+#line 1603 "syntaxique.tab.c"
+    break;
+
+  case 40: /* facteur: FLOAT_VAL  */
+#line 302 "syntaxique.y"
+                { 
+        char b[20]; sprintf(b, "%.2f", (yyvsp[0].reel)); (yyval.str) = strdup(b); 
+    }
+#line 1611 "syntaxique.tab.c"
+    break;
+
+  case 41: /* facteur: ENT_SIGNE  */
+#line 306 "syntaxique.y"
+                { 
+        char b[20]; sprintf(b, "%d", (yyvsp[0].entier)); (yyval.str) = strdup(b); 
+    }
+#line 1619 "syntaxique.tab.c"
+    break;
+
+  case 42: /* facteur: REEL_SIGNE  */
+#line 309 "syntaxique.y"
+                 { 
+        char b[20]; sprintf(b, "%.2f", (yyvsp[0].reel)); (yyval.str) = strdup(b); 
+    }
+#line 1627 "syntaxique.tab.c"
+    break;
+
+  case 43: /* facteur: PARG expression PARD  */
+#line 314 "syntaxique.y"
+                           { (yyval.str) = (yyvsp[-1].str); }
+#line 1633 "syntaxique.tab.c"
+    break;
+
+  case 44: /* facteur: PARG error PARD  */
+#line 317 "syntaxique.y"
+                      {
+        printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+        (yyval.str) = strdup("empty");
+    }
+#line 1644 "syntaxique.tab.c"
+    break;
+
+  case 45: /* $@1: %empty  */
+#line 326 "syntaxique.y"
       { 
         fin_if = prochain_quad(); 
         quad("BZ", "", (yyvsp[-1].str), ""); 
       }
-#line 1425 "syntaxique.tab.c"
+#line 1653 "syntaxique.tab.c"
     break;
 
-  case 37: /* COND: IF PARG EXPR_LOG PARD $@1 ACCOLG INSTS ACCOLD ELSE_PART  */
-#line 170 "syntaxique.y"
+  case 46: /* COND: IF PARG EXPR_LOG PARD $@1 ACCOLG INSTS ACCOLD ELSE_PART  */
+#line 330 "syntaxique.y"
                                     {
+          // On patche le BZ du début vers ici si la condition était fausse
           sprintf(tmp_addr, "%d", prochain_quad());
           modifier_quad(fin_if, 3, tmp_addr);
       }
-#line 1434 "syntaxique.tab.c"
+#line 1663 "syntaxique.tab.c"
     break;
 
-  case 38: /* $@2: %empty  */
-#line 177 "syntaxique.y"
+  case 47: /* $@2: %empty  */
+#line 336 "syntaxique.y"
+      {
+        printf("Erreur Syntaxique: ligne %d , col %d condition invalide \n", nb_lignes, nb_col);
+        nb_erreurs++;
+        yyerrok;
+      }
+#line 1673 "syntaxique.tab.c"
+    break;
+
+  case 49: /* $@3: %empty  */
+#line 345 "syntaxique.y"
            {
              deb_else = prochain_quad();
-             quad("BR", "", "", "");
+             quad("BR", "", "", ""); // Saut pour sauter le bloc ELSE si le IF était vrai
+             
+             // On patche le BZ du IF pour qu'il vienne ICI (début du else)
              sprintf(tmp_addr, "%d", prochain_quad());
              modifier_quad(fin_if, 3, tmp_addr);
+             
+             fin_if = deb_else; // Maintenant, fin_if pointe sur le BR pour le patcher plus tard
            }
-#line 1445 "syntaxique.tab.c"
+#line 1688 "syntaxique.tab.c"
     break;
 
-  case 41: /* $@3: %empty  */
-#line 188 "syntaxique.y"
-        { 
-            loop_start = prochain_quad(); 
-        }
-#line 1453 "syntaxique.tab.c"
+  case 52: /* $@4: %empty  */
+#line 359 "syntaxique.y"
+              { push_loop_start(prochain_quad()); }
+#line 1694 "syntaxique.tab.c"
     break;
 
-  case 42: /* $@4: %empty  */
-#line 192 "syntaxique.y"
+  case 53: /* $@5: %empty  */
+#line 361 "syntaxique.y"
         {
-            loop_cond = prochain_quad();
-            quad("BZ", "", (yyvsp[-1].str), "");
+           int q_bz = prochain_quad();
+           quad("BZ", "", (yyvsp[-1].str), ""); 
+           push_loop_cond(q_bz); // On mémorise l'adresse du BZ pour le patcher
         }
-#line 1462 "syntaxique.tab.c"
+#line 1704 "syntaxique.tab.c"
     break;
 
-  case 43: /* BOUCLE: WHILE $@3 PARG EXPR_LOG PARD $@4 ACCOLG INSTS ACCOLD  */
-#line 197 "syntaxique.y"
+  case 54: /* BOUCLE: WHILE $@4 PARG EXPR_LOG PARD $@5 ACCOLG INSTS ACCOLD  */
+#line 367 "syntaxique.y"
         {
-            sprintf(tmp_addr, "%d", loop_start);
-            quad("BR", "", "", tmp_addr);
-            sprintf(tmp_addr, "%d", prochain_quad());
-            modifier_quad(loop_cond, 3, tmp_addr);
+           int cond = pop_loop_cond();
+           int start = pop_loop_start();
+           
+           sprintf(tmp_addr, "%d", start);
+           quad("BR", "", "", tmp_addr); // Retour au test de condition
+           
+           sprintf(tmp_addr, "%d", prochain_quad());
+           modifier_quad(cond, 3, tmp_addr); // Sortie de boucle
         }
-#line 1473 "syntaxique.tab.c"
+#line 1719 "syntaxique.tab.c"
     break;
 
-  case 44: /* $@5: %empty  */
-#line 204 "syntaxique.y"
+  case 55: /* $@6: %empty  */
+#line 378 "syntaxique.y"
         {
-            // Initialisation: $3 = variable, $5 = debut, $7 = pas, $9 = fin
-            char* start_val = malloc(20);
-            char* step_val = malloc(20);
-            char* end_val = malloc(20);
-            sprintf(start_val, "%d", (yyvsp[-5].integer));
-            sprintf(step_val, "%d", (yyvsp[-3].integer));
-            sprintf(end_val, "%d", (yyvsp[-1].integer));
-            
-            quad("=", start_val, "", (yyvsp[-7].str));
-            loop_start = prochain_quad();
-            char* temp_cond = new_temp();
-            quad("SUP", (yyvsp[-7].str), end_val, temp_cond);
-            loop_cond = prochain_quad();
-            quad("BZ", "", temp_cond, "");
+           // Initialisation : i = start_val
+           char val_init[20]; sprintf(val_init, "%d", (yyvsp[-5].entier));
+           quad("=", val_init, "", (yyvsp[-7].str));
+           
+           push_loop_start(prochain_quad()); // Adresse du test de sortie
+           
+           char* t = new_temp();
+           char val_limit[20]; sprintf(val_limit, "%d", (yyvsp[-3].entier));
+           quad("BG", (yyvsp[-7].str), val_limit, t); // Si i > limite
+           
+           int q_bz = prochain_quad();
+           quad("BZ", "", t, ""); // Si BG est vrai (t=1), on sort
+           push_loop_cond(q_bz);
         }
-#line 1494 "syntaxique.tab.c"
+#line 1739 "syntaxique.tab.c"
     break;
 
-  case 45: /* BOUCLE: FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD $@5 ACCOLG INSTS ACCOLD  */
-#line 221 "syntaxique.y"
+  case 56: /* BOUCLE: FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD $@6 ACCOLG INSTS ACCOLD  */
+#line 394 "syntaxique.y"
         {
-            char* temp_step = new_temp();
-            char* step_val = malloc(20);
-            sprintf(step_val, "%d", (yyvsp[-7].integer));
-            quad("+", (yyvsp[-11].str), step_val, temp_step);
-            quad("=", temp_step, "", (yyvsp[-11].str));
-            sprintf(tmp_addr, "%d", loop_start);
-            quad("BR", "", "", tmp_addr);
-            sprintf(tmp_addr, "%d", prochain_quad());
-            modifier_quad(loop_cond, 3, tmp_addr);
+           // Incrémentation : i = i + step
+           char* t2 = new_temp();
+           char val_step[20]; sprintf(val_step, "%d", (yyvsp[-5].entier));
+           quad("+", (yyvsp[-11].str), val_step, t2);
+           quad("=", t2, "", (yyvsp[-11].str));
+           
+           int cond = pop_loop_cond();
+           int start = pop_loop_start();
+           
+           sprintf(tmp_addr, "%d", start);
+           quad("BR", "", "", tmp_addr);
+           
+           sprintf(tmp_addr, "%d", prochain_quad());
+           modifier_quad(cond, 3, tmp_addr);
         }
-#line 1510 "syntaxique.tab.c"
+#line 1760 "syntaxique.tab.c"
     break;
 
-  case 46: /* EXPR_LOG: EXPR_LOG OR EXPR_LOG  */
-#line 234 "syntaxique.y"
-                               { (yyval.str) = new_temp(); quad("OR", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1516 "syntaxique.tab.c"
+  case 57: /* EXPR_LOG: EXPR_LOG OR EXPR_LOG  */
+#line 411 "syntaxique.y"
+                                { (yyval.str) = new_temp(); quad("OR", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1766 "syntaxique.tab.c"
     break;
 
-  case 47: /* EXPR_LOG: EXPR_LOG AND EXPR_LOG  */
-#line 235 "syntaxique.y"
+  case 58: /* EXPR_LOG: EXPR_LOG AND EXPR_LOG  */
+#line 412 "syntaxique.y"
                                 { (yyval.str) = new_temp(); quad("AND", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1522 "syntaxique.tab.c"
+#line 1772 "syntaxique.tab.c"
     break;
 
-  case 48: /* EXPR_LOG: NOT EXPR_LOG  */
-#line 236 "syntaxique.y"
-                       { (yyval.str) = new_temp(); quad("NOT", (yyvsp[0].str), "", (yyval.str)); }
-#line 1528 "syntaxique.tab.c"
+  case 59: /* EXPR_LOG: NOT EXPR_LOG  */
+#line 413 "syntaxique.y"
+                                { (yyval.str) = new_temp(); quad("NOT", (yyvsp[0].str), "", (yyval.str)); }
+#line 1778 "syntaxique.tab.c"
     break;
 
-  case 49: /* EXPR_LOG: expression SUP expression  */
-#line 237 "syntaxique.y"
-                                    { (yyval.str) = new_temp(); quad("SUP", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1534 "syntaxique.tab.c"
+  case 60: /* EXPR_LOG: expression SUP expression  */
+#line 414 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("SUP", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1784 "syntaxique.tab.c"
     break;
 
-  case 50: /* EXPR_LOG: expression INF expression  */
-#line 238 "syntaxique.y"
-                                    { (yyval.str) = new_temp(); quad("INF", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1540 "syntaxique.tab.c"
+  case 61: /* EXPR_LOG: expression INF expression  */
+#line 415 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("INF", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1790 "syntaxique.tab.c"
     break;
 
-  case 51: /* EXPR_LOG: expression EGAL expression  */
-#line 239 "syntaxique.y"
-                                     { (yyval.str) = new_temp(); quad("EGAL", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
-#line 1546 "syntaxique.tab.c"
+  case 62: /* EXPR_LOG: expression SUPEG expression  */
+#line 416 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("SUPEG", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1796 "syntaxique.tab.c"
     break;
 
-  case 52: /* EXPR_LOG: PARG EXPR_LOG PARD  */
-#line 240 "syntaxique.y"
-                             { (yyval.str) = (yyvsp[-1].str); }
-#line 1552 "syntaxique.tab.c"
+  case 63: /* EXPR_LOG: expression INFEG expression  */
+#line 417 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("INFEG", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1802 "syntaxique.tab.c"
     break;
 
-  case 53: /* WRITE_I: WRITE PARG IDF PARD  */
-#line 243 "syntaxique.y"
-                             {
-    int idx = search_idf_cst((yyvsp[-1].str));
-    if(idx == -1) {
-        printf("Erreur Semantique: ligne %d, variable '%s' non declaree\n", nb_lignes, (yyvsp[-1].str));
+  case 64: /* EXPR_LOG: expression DIFF expression  */
+#line 418 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("DIFF", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1808 "syntaxique.tab.c"
+    break;
+
+  case 65: /* EXPR_LOG: expression EGAL expression  */
+#line 419 "syntaxique.y"
+                                      { (yyval.str) = new_temp(); quad("EGAL", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); }
+#line 1814 "syntaxique.tab.c"
+    break;
+
+  case 66: /* EXPR_LOG: PARG EXPR_LOG PARD  */
+#line 420 "syntaxique.y"
+                                { (yyval.str) = (yyvsp[-1].str); }
+#line 1820 "syntaxique.tab.c"
+    break;
+
+  case 67: /* WRITE_I: WRITE PARG IDF PARD PV  */
+#line 424 "syntaxique.y"
+                                { 
+    printf("%s \n", (yyvsp[-2].str));
+    if(rechercher((yyvsp[-2].str)) == NULL) { 
+        printf("Erreur Semantique ligne %d: variable '%s' non declaree\n", nb_lignes, (yyvsp[-2].str));
         nb_erreurs++;
+        yyerrok;
     }
 }
-#line 1564 "syntaxique.tab.c"
+#line 1833 "syntaxique.tab.c"
     break;
 
 
-#line 1568 "syntaxique.tab.c"
+#line 1837 "syntaxique.tab.c"
 
       default: break;
     }
@@ -1757,26 +2026,27 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 252 "syntaxique.y"
+#line 435 "syntaxique.y"
 
 
-void yyerror(const char* s) { 
-    printf("Erreur Syntaxique: ligne %d, pres de '%s'\n", nb_lignes, yytext);
-    nb_erreurs++; 
-}
+void yyerror(char *s) {}
+
 
 int main(int argc, char *argv[]) {
     if (argc > 1) {
         FILE *f = fopen(argv[1], "r");
-        if (f) yyin = f;
+        if (f) { yyin = f; }
         else {
-            printf("Can't open file!\n");
-            return 1;
+            printf("Impossible d'ouvrir le fichier !\n");
+            exit(1);
         }
     }
+    
     yyparse();
+
     afficher_ts_ids();
     afficher_ts_kw();
     afficher_ts_sep();
+    
     return 0;
 }
