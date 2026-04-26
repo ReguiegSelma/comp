@@ -1,0 +1,38 @@
+PROGRAM Test
+DECL
+   INTEGER : a, b, c, i, tab[3];
+   FLOAT : x, y;
+   CONST PI = 3.14;
+   CONST LIMIT = 10;
+ENDDECL
+
+BEGIN
+
+a = 2;
+b = 5;
+c = a + b * 2;
+x=a;
+x = 2.5;
+y = x + 1;
+
+tab[0] = 10;
+tab[1] = a + b;
+tab[2] = tab[0] + tab[1];
+
+IF (a < b) {
+    c = c + 1;
+} ELSE {
+    c = c - 1;
+}
+
+i = 0;
+WHILE (i < 3) {
+    tab[i] = tab[i] + 1;
+    i = i + 1;
+}
+
+c = c + LIMIT;
+
+WRITE(c);
+
+END

@@ -9,4 +9,3 @@ char tmp_addr[10]; //why
 
 
 
-VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }/* why str -1

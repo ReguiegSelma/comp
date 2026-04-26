@@ -73,7 +73,7 @@ REEL_SIGNE   \([+-]{REEL}\)
 
 {ENT_SIGNE} {
     char temp[20];
-    strncpy(temp, yytext+1, yyleng-2); // enlever ()
+    strncpy(temp, yytext+1, yyleng-2); // enlever () strncpy(destination, source, n) copier n char 
     temp[yyleng-2] = '\0';
 
     yylval.entier = atoi(temp);

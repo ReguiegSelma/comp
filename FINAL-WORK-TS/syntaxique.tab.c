@@ -87,8 +87,9 @@ int nb_erreurs = 0;
 int yylex();
 char type_svg[20];
 char tmp_addr[10];
+char type_const[20];
 
-#line 92 "syntaxique.tab.c"
+#line 93 "syntaxique.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -576,13 +577,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    43,    43,    54,    55,    56,    58,    60,    61,    64,
-      65,    68,    71,    82,    85,    86,    87,    88,    90,    90,
-      91,    91,    91,    91,    92,   102,   152,   210,   215,   222,
-     241,   259,   262,   280,   306,   311,   328,   362,   369,   374,
-     378,   382,   388,   391,   400,   399,   418,   417,   427,   426,
-     439,   445,   447,   445,   464,   463,   511,   518,   525,   531,
-     538,   545,   552,   559,   566,   573,   576
+       0,    45,    45,    56,    57,    58,    60,    62,    63,    66,
+      67,    70,    73,    84,    87,    90,    93,    96,    99,    99,
+     100,   100,   100,   100,   101,   110,   160,   218,   223,   230,
+     249,   267,   270,   288,   314,   319,   336,   370,   377,   382,
+     387,   392,   399,   402,   411,   410,   429,   428,   438,   437,
+     450,   456,   458,   456,   475,   474,   522,   529,   536,   542,
+     549,   556,   563,   570,   577,   584,   587
 };
 #endif
 
@@ -1252,7 +1253,7 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END  */
-#line 44 "syntaxique.y"
+#line 46 "syntaxique.y"
       {      
         if(nb_erreurs == 0){
             printf("Syntaxe Correcte\n");
@@ -1262,31 +1263,31 @@ yyreduce:
             printf("\n Compilation echouee : %d erreur(s) detectee(s)\n", nb_erreurs);
         }
       }
-#line 1266 "syntaxique.tab.c"
+#line 1267 "syntaxique.tab.c"
     break;
 
   case 7: /* TYPE: INTEGER  */
-#line 60 "syntaxique.y"
+#line 62 "syntaxique.y"
               { strcpy(type_svg, "INTEGER"); }
-#line 1272 "syntaxique.tab.c"
+#line 1273 "syntaxique.tab.c"
     break;
 
   case 8: /* TYPE: FLOAT  */
-#line 61 "syntaxique.y"
+#line 63 "syntaxique.y"
               { strcpy(type_svg, "FLOAT"); }
-#line 1278 "syntaxique.tab.c"
+#line 1279 "syntaxique.tab.c"
     break;
 
   case 11: /* OBJET: IDF  */
-#line 68 "syntaxique.y"
+#line 70 "syntaxique.y"
            { 
         inserer((yyvsp[0].str), "idf", type_svg, 0, 0); 
      }
-#line 1286 "syntaxique.tab.c"
+#line 1287 "syntaxique.tab.c"
     break;
 
   case 12: /* OBJET: IDF CROCHG INT_VAL CROCHD  */
-#line 71 "syntaxique.y"
+#line 73 "syntaxique.y"
                                  { 
         // VERIFICATION : La taille du tableau doit être > 0
         if ((yyvsp[-1].entier) <= 0) {
@@ -1297,45 +1298,50 @@ yyreduce:
             inserer((yyvsp[-3].str), "tab", type_svg, 0, (yyvsp[-1].entier)); 
         }
      }
-#line 1301 "syntaxique.tab.c"
+#line 1302 "syntaxique.tab.c"
+    break;
+
+  case 13: /* DEC_CONST: CONST IDF AFFECT VAL_CONST PV  */
+#line 84 "syntaxique.y"
+                                        { inserer((yyvsp[-3].str), "cst", type_const, (yyvsp[-1].reel), 0);}
+#line 1308 "syntaxique.tab.c"
     break;
 
   case 14: /* VAL_CONST: INT_VAL  */
-#line 85 "syntaxique.y"
-                      { inserer((yyvsp[(-1) - (1)].str), "cst", "INTEGER", (float)(yyvsp[0].entier), 0); }
-#line 1307 "syntaxique.tab.c"
+#line 88 "syntaxique.y"
+      {  (yyval.reel) = (float)(yyvsp[0].entier);  strcpy(type_const, "INTEGER"); }
+#line 1314 "syntaxique.tab.c"
     break;
 
   case 15: /* VAL_CONST: FLOAT_VAL  */
-#line 86 "syntaxique.y"
-                      { inserer((yyvsp[(-1) - (1)].str), "cst", "FLOAT", (yyvsp[0].reel), 0); }
-#line 1313 "syntaxique.tab.c"
+#line 91 "syntaxique.y"
+      { (yyval.reel) = (yyvsp[0].reel);   strcpy(type_const, "FLOAT");}
+#line 1320 "syntaxique.tab.c"
     break;
 
   case 16: /* VAL_CONST: ENT_SIGNE  */
-#line 87 "syntaxique.y"
-                      { inserer((yyvsp[(-1) - (1)].str), "cst", "INTEGER", (float)(yyvsp[0].entier), 0); }
-#line 1319 "syntaxique.tab.c"
+#line 94 "syntaxique.y"
+      { (yyval.reel) = (float)(yyvsp[0].entier); strcpy(type_const, "INTEGER"); }
+#line 1326 "syntaxique.tab.c"
     break;
 
   case 17: /* VAL_CONST: REEL_SIGNE  */
-#line 88 "syntaxique.y"
-                      { inserer((yyvsp[(-1) - (1)].str), "cst", "FLOAT", (yyvsp[0].reel), 0); }
-#line 1325 "syntaxique.tab.c"
+#line 97 "syntaxique.y"
+      { (yyval.reel) = (yyvsp[0].reel); strcpy(type_const, "FLOAT");}
+#line 1332 "syntaxique.tab.c"
     break;
 
   case 24: /* INST: error PV  */
-#line 92 "syntaxique.y"
+#line 101 "syntaxique.y"
                { 
-        // On ne met PAS de yyerrok ici pour éviter les boucles infinies d'erreurs
         printf("Erreur Syntaxique ligne %d: ';' manquant ou instruction mal formee\n", nb_lignes);
         nb_erreurs++;
       }
-#line 1335 "syntaxique.tab.c"
+#line 1341 "syntaxique.tab.c"
     break;
 
   case 25: /* AFF: IDF AFFECT expression PV  */
-#line 102 "syntaxique.y"
+#line 110 "syntaxique.y"
                              {
         Symbole* s1 = rechercher((yyvsp[-3].str));
         if (s1 == NULL) {
@@ -1378,11 +1384,11 @@ yyreduce:
             quad("=", (yyvsp[-1].str), "", (yyvsp[-3].str));
         }
     }
-#line 1382 "syntaxique.tab.c"
+#line 1388 "syntaxique.tab.c"
     break;
 
   case 26: /* AFF: IDF CROCHG expression CROCHD AFFECT expression PV  */
-#line 152 "syntaxique.y"
+#line 160 "syntaxique.y"
                                                         { 
         Symbole* p = rechercher((yyvsp[-6].str));     // Recherche du tableau
         Symbole* p_idx = rechercher((yyvsp[-4].str)); // Recherche si l'indice est une variable
@@ -1408,8 +1414,8 @@ yyreduce:
                 nb_erreurs++;
             }
 
-            //didnt do this 
-            // 3. Vérification des types (AMÉLIORÉE avec promotion)
+            
+            // 3. Vérification des types compatibilité
             char* type_source;
             if (p_src != NULL) {
                 type_source = p_src->type;
@@ -1439,31 +1445,31 @@ yyreduce:
             quad("=", (yyvsp[-1].str), "", res);
         }
     }
-#line 1443 "syntaxique.tab.c"
+#line 1449 "syntaxique.tab.c"
     break;
 
   case 27: /* AFF: IDF CROCHG error CROCHD AFFECT expression PV  */
-#line 210 "syntaxique.y"
+#line 218 "syntaxique.y"
                                                   {
         printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
      }
-#line 1453 "syntaxique.tab.c"
+#line 1459 "syntaxique.tab.c"
     break;
 
   case 28: /* AFF: IDF CROCHG expression CROCHD AFFECT error PV  */
-#line 215 "syntaxique.y"
+#line 223 "syntaxique.y"
                                                   {
         printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
      }
-#line 1463 "syntaxique.tab.c"
+#line 1469 "syntaxique.tab.c"
     break;
 
   case 29: /* expression: expression PLUS terme  */
-#line 222 "syntaxique.y"
+#line 230 "syntaxique.y"
                                   { 
                 if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
                     (yyval.str) = strdup("empty");
@@ -1483,11 +1489,11 @@ yyreduce:
                     inserer((yyval.str), "temp", type_res, v1 + v3, 0); 
                 }
             }
-#line 1487 "syntaxique.tab.c"
+#line 1493 "syntaxique.tab.c"
     break;
 
   case 30: /* expression: expression MOINS terme  */
-#line 241 "syntaxique.y"
+#line 249 "syntaxique.y"
                                    { 
                 if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
                     (yyval.str) = strdup("empty");
@@ -1506,17 +1512,17 @@ yyreduce:
                     inserer((yyval.str), "temp", type_res, v1 - v3, 0);
                 }
             }
-#line 1510 "syntaxique.tab.c"
-    break;
-
-  case 31: /* expression: terme  */
-#line 259 "syntaxique.y"
-                  { (yyval.str) = (yyvsp[0].str); }
 #line 1516 "syntaxique.tab.c"
     break;
 
+  case 31: /* expression: terme  */
+#line 267 "syntaxique.y"
+                  { (yyval.str) = (yyvsp[0].str); }
+#line 1522 "syntaxique.tab.c"
+    break;
+
   case 32: /* terme: terme MULT facteur  */
-#line 262 "syntaxique.y"
+#line 270 "syntaxique.y"
                           { 
             if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
                 (yyval.str) = strdup("empty");
@@ -1535,11 +1541,11 @@ yyreduce:
                 inserer((yyval.str), "temp", type_res, v1 * v3, 0);
             }
         }
-#line 1539 "syntaxique.tab.c"
+#line 1545 "syntaxique.tab.c"
     break;
 
   case 33: /* terme: terme DIV facteur  */
-#line 280 "syntaxique.y"
+#line 288 "syntaxique.y"
                     { 
             if(strcmp((yyvsp[-2].str), "empty") == 0 || strcmp((yyvsp[0].str), "empty") == 0) {
                 (yyval.str) = strdup("empty");
@@ -1566,17 +1572,17 @@ yyreduce:
                 }
             }
         }
-#line 1570 "syntaxique.tab.c"
-    break;
-
-  case 34: /* terme: facteur  */
-#line 306 "syntaxique.y"
-               { (yyval.str) = (yyvsp[0].str); }
 #line 1576 "syntaxique.tab.c"
     break;
 
+  case 34: /* terme: facteur  */
+#line 314 "syntaxique.y"
+               { (yyval.str) = (yyvsp[0].str); }
+#line 1582 "syntaxique.tab.c"
+    break;
+
   case 35: /* facteur: IDF  */
-#line 311 "syntaxique.y"
+#line 319 "syntaxique.y"
         { 
         Symbole* s = rechercher((yyvsp[0].str));
         if (s == NULL) {
@@ -1593,11 +1599,11 @@ yyreduce:
             }
         }
     }
-#line 1597 "syntaxique.tab.c"
+#line 1603 "syntaxique.tab.c"
     break;
 
   case 36: /* facteur: IDF CROCHG expression CROCHD  */
-#line 328 "syntaxique.y"
+#line 336 "syntaxique.y"
                                    { 
         Symbole* s = rechercher((yyvsp[-3].str));
         if (s == NULL) {
@@ -1631,76 +1637,79 @@ yyreduce:
             }
         }
     }
-#line 1635 "syntaxique.tab.c"
+#line 1641 "syntaxique.tab.c"
     break;
 
   case 37: /* facteur: IDF CROCHG error CROCHD  */
-#line 362 "syntaxique.y"
+#line 370 "syntaxique.y"
                               {
         printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
         (yyval.str) = strdup("empty");
     }
-#line 1646 "syntaxique.tab.c"
+#line 1652 "syntaxique.tab.c"
     break;
 
   case 38: /* facteur: INT_VAL  */
-#line 369 "syntaxique.y"
+#line 377 "syntaxique.y"
               { 
-        char b[20]; sprintf(b, "%d", (yyvsp[0].entier)); (yyval.str) = strdup(b); 
-        // Important : on enregistre la constante pour que rechercher() la trouve avec son type
-        if (!rechercher(b)) inserer(b, "cst", "INTEGER", (float)(yyvsp[0].entier), 0);
+    char b[20]; 
+    sprintf(b, "%d", (yyvsp[0].entier)); 
+    (yyval.str) = strdup(b); 
     }
-#line 1656 "syntaxique.tab.c"
+#line 1662 "syntaxique.tab.c"
     break;
 
   case 39: /* facteur: FLOAT_VAL  */
-#line 374 "syntaxique.y"
+#line 382 "syntaxique.y"
                 { 
-        char b[20]; sprintf(b, "%.2f", (yyvsp[0].reel)); (yyval.str) = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "FLOAT", (yyvsp[0].reel), 0);
+    char b[20]; 
+    sprintf(b, "%.2f", (yyvsp[0].reel)); 
+    (yyval.str) = strdup(b); 
     }
-#line 1665 "syntaxique.tab.c"
+#line 1672 "syntaxique.tab.c"
     break;
 
   case 40: /* facteur: ENT_SIGNE  */
-#line 378 "syntaxique.y"
+#line 387 "syntaxique.y"
                 { 
-        char b[20]; sprintf(b, "%d", (yyvsp[0].entier)); (yyval.str) = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "INTEGER", (float)(yyvsp[0].entier), 0);
+    char b[20]; 
+    sprintf(b, "%d", (yyvsp[0].entier)); 
+    (yyval.str) = strdup(b); 
     }
-#line 1674 "syntaxique.tab.c"
+#line 1682 "syntaxique.tab.c"
     break;
 
   case 41: /* facteur: REEL_SIGNE  */
-#line 382 "syntaxique.y"
+#line 392 "syntaxique.y"
                  { 
-        char b[20]; sprintf(b, "%.2f", (yyvsp[0].reel)); (yyval.str) = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "FLOAT", (yyvsp[0].reel), 0);
+    char b[20]; 
+    sprintf(b, "%.2f", (yyvsp[0].reel)); 
+    (yyval.str) = strdup(b); 
     }
-#line 1683 "syntaxique.tab.c"
+#line 1692 "syntaxique.tab.c"
     break;
 
   case 42: /* facteur: PARG expression PARD  */
-#line 388 "syntaxique.y"
+#line 399 "syntaxique.y"
                            { (yyval.str) = (yyvsp[-1].str); }
-#line 1689 "syntaxique.tab.c"
+#line 1698 "syntaxique.tab.c"
     break;
 
   case 43: /* facteur: PARG error PARD  */
-#line 391 "syntaxique.y"
+#line 402 "syntaxique.y"
                       {
         printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
         yyerrok;
         (yyval.str) = strdup("empty");
     }
-#line 1700 "syntaxique.tab.c"
+#line 1709 "syntaxique.tab.c"
     break;
 
   case 44: /* $@1: %empty  */
-#line 400 "syntaxique.y"
+#line 411 "syntaxique.y"
       { 
         // On récupère le résultat de la condition dans la TS pour "info"
         Symbole* s_cond = rechercher((yyvsp[-1].str));
@@ -1712,31 +1721,31 @@ yyreduce:
         fin_if = prochain_quad(); 
         quad("BZ", "", (yyvsp[-1].str), ""); // Saut vers ELSE ou FIN si condition fausse (0)
       }
-#line 1716 "syntaxique.tab.c"
+#line 1725 "syntaxique.tab.c"
     break;
 
   case 45: /* COND: IF PARG EXPR_LOG PARD $@1 ACCOLG INSTS ACCOLD ELSE_PART  */
-#line 412 "syntaxique.y"
+#line 423 "syntaxique.y"
       {
           // On patche le dernier saut (soit le BZ du IF, soit le BR du ELSE)
           sprintf(tmp_addr, "%d", prochain_quad());
           modifier_quad(fin_if, 3, tmp_addr);
       }
-#line 1726 "syntaxique.tab.c"
+#line 1735 "syntaxique.tab.c"
     break;
 
   case 46: /* $@2: %empty  */
-#line 418 "syntaxique.y"
+#line 429 "syntaxique.y"
       {
         printf("Erreur Syntaxique ligne %d: Condition invalide\n", nb_lignes);
         nb_erreurs++;
         yyerrok;
       }
-#line 1736 "syntaxique.tab.c"
+#line 1745 "syntaxique.tab.c"
     break;
 
   case 48: /* $@3: %empty  */
-#line 427 "syntaxique.y"
+#line 438 "syntaxique.y"
            {
              deb_else = prochain_quad();
              quad("BR", "", "", ""); // Saut pour sauter le ELSE si le IF a été exécuté
@@ -1748,35 +1757,35 @@ yyreduce:
              // On met à jour fin_if pour qu'il contienne l'indice du BR (à patcher à la fin)
              fin_if = deb_else; 
            }
-#line 1752 "syntaxique.tab.c"
+#line 1761 "syntaxique.tab.c"
     break;
 
   case 50: /* ELSE_PART: %empty  */
-#line 440 "syntaxique.y"
+#line 451 "syntaxique.y"
            {
              /* Partie vide : IF sans ELSE */
            }
-#line 1760 "syntaxique.tab.c"
+#line 1769 "syntaxique.tab.c"
     break;
 
   case 51: /* $@4: %empty  */
-#line 445 "syntaxique.y"
+#line 456 "syntaxique.y"
               { push_loop_start(prochain_quad()); }
-#line 1766 "syntaxique.tab.c"
+#line 1775 "syntaxique.tab.c"
     break;
 
   case 52: /* $@5: %empty  */
-#line 447 "syntaxique.y"
+#line 458 "syntaxique.y"
         {
            int q_bz = prochain_quad();
            quad("BZ", "", (yyvsp[-1].str), ""); 
            push_loop_cond(q_bz); // On mémorise l'adresse du BZ pour le patcher
         }
-#line 1776 "syntaxique.tab.c"
+#line 1785 "syntaxique.tab.c"
     break;
 
   case 53: /* BOUCLE: WHILE $@4 PARG EXPR_LOG PARD $@5 ACCOLG INSTS ACCOLD  */
-#line 453 "syntaxique.y"
+#line 464 "syntaxique.y"
         {
            int cond = pop_loop_cond();
            int start = pop_loop_start();
@@ -1787,11 +1796,11 @@ yyreduce:
            sprintf(tmp_addr, "%d", prochain_quad());
            modifier_quad(cond, 3, tmp_addr); // Sortie de boucle
         }
-#line 1791 "syntaxique.tab.c"
+#line 1800 "syntaxique.tab.c"
     break;
 
   case 54: /* $@6: %empty  */
-#line 464 "syntaxique.y"
+#line 475 "syntaxique.y"
         {
            // Initialisation : i = start_val
         // 1. Initialisation dans la TS pour la propagation
@@ -1814,11 +1823,11 @@ yyreduce:
             quad("BZ", "", t, ""); 
             push_loop_cond(q_bz);
         }
-#line 1818 "syntaxique.tab.c"
+#line 1827 "syntaxique.tab.c"
     break;
 
   case 55: /* BOUCLE: FOR PARG IDF DEUXPTS INT_VAL DEUXPTS INT_VAL DEUXPTS INT_VAL PARD $@6 ACCOLG INSTS ACCOLD  */
-#line 487 "syntaxique.y"
+#line 498 "syntaxique.y"
         {
             // 6. Mise à jour de la valeur de l'index dans la TS (i = i + step)
             float v_current = obtenir_val((yyvsp[-11].str));
@@ -1842,11 +1851,11 @@ yyreduce:
             sprintf(tmp_addr, "%d", prochain_quad());
             modifier_quad(cond_to_patch, 3, tmp_addr);
         }
-#line 1846 "syntaxique.tab.c"
+#line 1855 "syntaxique.tab.c"
     break;
 
   case 56: /* EXPR_LOG: EXPR_LOG OR EXPR_LOG  */
-#line 511 "syntaxique.y"
+#line 522 "syntaxique.y"
                                 { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : 0;
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : 0;
@@ -1854,11 +1863,11 @@ yyreduce:
             quad("OR", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 || v3) ? 1.0 : 0.0, 0);
         }
-#line 1858 "syntaxique.tab.c"
+#line 1867 "syntaxique.tab.c"
     break;
 
   case 57: /* EXPR_LOG: EXPR_LOG AND EXPR_LOG  */
-#line 518 "syntaxique.y"
+#line 529 "syntaxique.y"
                                 { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : 0;
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : 0;
@@ -1866,22 +1875,22 @@ yyreduce:
             quad("AND", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 && v3) ? 1.0 : 0.0, 0);
         }
-#line 1870 "syntaxique.tab.c"
+#line 1879 "syntaxique.tab.c"
     break;
 
   case 58: /* EXPR_LOG: NOT EXPR_LOG  */
-#line 525 "syntaxique.y"
+#line 536 "syntaxique.y"
                        { 
             float v2 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : 0;
             (yyval.str) = new_temp(); 
             quad("NOT", (yyvsp[0].str), "", (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (!v2) ? 1.0 : 0.0, 0);
         }
-#line 1881 "syntaxique.tab.c"
+#line 1890 "syntaxique.tab.c"
     break;
 
   case 59: /* EXPR_LOG: expression SUP expression  */
-#line 531 "syntaxique.y"
+#line 542 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1889,11 +1898,11 @@ yyreduce:
             quad("SUP", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 > v3) ? 1.0 : 0.0, 0);
         }
-#line 1893 "syntaxique.tab.c"
+#line 1902 "syntaxique.tab.c"
     break;
 
   case 60: /* EXPR_LOG: expression INF expression  */
-#line 538 "syntaxique.y"
+#line 549 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1901,11 +1910,11 @@ yyreduce:
             quad("INF", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 < v3) ? 1.0 : 0.0, 0);
         }
-#line 1905 "syntaxique.tab.c"
+#line 1914 "syntaxique.tab.c"
     break;
 
   case 61: /* EXPR_LOG: expression SUPEG expression  */
-#line 545 "syntaxique.y"
+#line 556 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1913,11 +1922,11 @@ yyreduce:
             quad("SUPEG", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 >= v3) ? 1.0 : 0.0, 0);
         }
-#line 1917 "syntaxique.tab.c"
+#line 1926 "syntaxique.tab.c"
     break;
 
   case 62: /* EXPR_LOG: expression INFEG expression  */
-#line 552 "syntaxique.y"
+#line 563 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1925,11 +1934,11 @@ yyreduce:
             quad("INFEG", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 <= v3) ? 1.0 : 0.0, 0);
         }
-#line 1929 "syntaxique.tab.c"
+#line 1938 "syntaxique.tab.c"
     break;
 
   case 63: /* EXPR_LOG: expression DIFF expression  */
-#line 559 "syntaxique.y"
+#line 570 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1937,11 +1946,11 @@ yyreduce:
             quad("DIFF", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 != v3) ? 1.0 : 0.0, 0);
         }
-#line 1941 "syntaxique.tab.c"
+#line 1950 "syntaxique.tab.c"
     break;
 
   case 64: /* EXPR_LOG: expression EGAL expression  */
-#line 566 "syntaxique.y"
+#line 577 "syntaxique.y"
                                       { 
             float v1 = (rechercher((yyvsp[-2].str))) ? obtenir_val((yyvsp[-2].str)) : atof((yyvsp[-2].str));
             float v3 = (rechercher((yyvsp[0].str))) ? obtenir_val((yyvsp[0].str)) : atof((yyvsp[0].str));
@@ -1949,17 +1958,17 @@ yyreduce:
             quad("EGAL", (yyvsp[-2].str), (yyvsp[0].str), (yyval.str)); 
             inserer((yyval.str), "temp", "INTEGER", (v1 == v3) ? 1.0 : 0.0, 0);
         }
-#line 1953 "syntaxique.tab.c"
+#line 1962 "syntaxique.tab.c"
     break;
 
   case 65: /* EXPR_LOG: PARG EXPR_LOG PARD  */
-#line 573 "syntaxique.y"
+#line 584 "syntaxique.y"
                                 { (yyval.str) = (yyvsp[-1].str); }
-#line 1959 "syntaxique.tab.c"
+#line 1968 "syntaxique.tab.c"
     break;
 
   case 66: /* WRITE_I: WRITE PARG IDF PARD PV  */
-#line 576 "syntaxique.y"
+#line 587 "syntaxique.y"
                                 { 
     Symbole* s = rechercher((yyvsp[-2].str));
     if(s == NULL) { 
@@ -1970,11 +1979,11 @@ yyreduce:
         printf(" Variable %s = %.2f\n", s->name, s->val);
     }
 }
-#line 1974 "syntaxique.tab.c"
+#line 1983 "syntaxique.tab.c"
     break;
 
 
-#line 1978 "syntaxique.tab.c"
+#line 1987 "syntaxique.tab.c"
 
       default: break;
     }
@@ -2167,7 +2176,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 589 "syntaxique.y"
+#line 600 "syntaxique.y"
 
 
 void yyerror(char *s) {}

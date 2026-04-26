@@ -17,6 +17,7 @@ int nb_erreurs = 0;
 int yylex();
 char type_svg[20];
 char tmp_addr[10];
+char type_const[20];
 %}
 
 %union {
@@ -29,7 +30,8 @@ char tmp_addr[10];
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
 %token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG DIFF PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
-%type <str> expression terme facteur EXPR_LOG
+%type <str> expression terme facteur EXPR_LOG 
+%type <reel> VAL_CONST
 
 %left PLUS MOINS
 %left MULT DIV
@@ -79,18 +81,24 @@ OBJET: IDF {
         }
      }
      ;
-DEC_CONST: CONST IDF AFFECT VAL_CONST PV ;
+DEC_CONST: CONST IDF AFFECT VAL_CONST PV{ inserer($2, "cst", type_const, $4, 0);};
 
-// On récupère le nom de l'IDF via l'indexage négatif ($<str>-1 est l'IDF)
-VAL_CONST: INT_VAL    { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
-         | FLOAT_VAL  { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
-         | ENT_SIGNE  { inserer($<str>-1, "cst", "INTEGER", (float)$1, 0); }
-         | REEL_SIGNE { inserer($<str>-1, "cst", "FLOAT", $1, 0); }
+VAL_CONST
+    : INT_VAL
+      {  $$ = (float)$1;  strcpy(type_const, "INTEGER"); }
+
+    | FLOAT_VAL
+      { $$ = $1;   strcpy(type_const, "FLOAT");}
+
+    | ENT_SIGNE
+      { $$ = (float)$1; strcpy(type_const, "INTEGER"); }
+
+    | REEL_SIGNE
+      { $$ = $1; strcpy(type_const, "FLOAT");};
 
 INSTS: INST INSTS | ;
 INST: AFF| COND | BOUCLE | WRITE_I 
     | error PV { 
-        // On ne met PAS de yyerrok ici pour éviter les boucles infinies d'erreurs
         printf("Erreur Syntaxique ligne %d: ';' manquant ou instruction mal formee\n", nb_lignes);
         nb_erreurs++;
       }
@@ -174,8 +182,8 @@ AFF:
                 nb_erreurs++;
             }
 
-            //didnt do this 
-            // 3. Vérification des types (AMÉLIORÉE avec promotion)
+            
+            // 3. Vérification des types compatibilité
             char* type_source;
             if (p_src != NULL) {
                 type_source = p_src->type;
@@ -367,21 +375,24 @@ facteur:
     }
     
     | INT_VAL { 
-        char b[20]; sprintf(b, "%d", $1); $$ = strdup(b); 
-        // Important : on enregistre la constante pour que rechercher() la trouve avec son type
-        if (!rechercher(b)) inserer(b, "cst", "INTEGER", (float)$1, 0);
+    char b[20]; 
+    sprintf(b, "%d", $1); 
+    $$ = strdup(b); 
     }
     | FLOAT_VAL { 
-        char b[20]; sprintf(b, "%.2f", $1); $$ = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "FLOAT", $1, 0);
+    char b[20]; 
+    sprintf(b, "%.2f", $1); 
+    $$ = strdup(b); 
     }
     | ENT_SIGNE { 
-        char b[20]; sprintf(b, "%d", $1); $$ = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "INTEGER", (float)$1, 0);
+    char b[20]; 
+    sprintf(b, "%d", $1); 
+    $$ = strdup(b); 
     }
     | REEL_SIGNE { 
-        char b[20]; sprintf(b, "%.2f", $1); $$ = strdup(b); 
-        if (!rechercher(b)) inserer(b, "cst", "FLOAT", $1, 0);
+    char b[20]; 
+    sprintf(b, "%.2f", $1); 
+    $$ = strdup(b); 
     }
 
 /* --- Expressions entre parenthèses --- */
