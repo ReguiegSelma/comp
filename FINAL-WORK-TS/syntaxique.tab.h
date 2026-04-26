@@ -94,8 +94,7 @@ extern int yydebug;
     CROCHD = 295,                  /* CROCHD  */
     AND = 296,                     /* AND  */
     OR = 297,                      /* OR  */
-    NOT = 298,                     /* NOT  */
-    LOWER_THAN_ELSE = 299          /* LOWER_THAN_ELSE  */
+    NOT = 298                      /* NOT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -110,7 +109,7 @@ union YYSTYPE
     float reel;
     char* str;
 
-#line 114 "syntaxique.tab.h"
+#line 113 "syntaxique.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
