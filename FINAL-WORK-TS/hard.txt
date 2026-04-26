@@ -14,14 +14,16 @@ A = 10;
 
    IF (A > 0) {
        IF (B > A) {
-           C = 1; // Ne devrait pas être exécuté
+           A= 3; // Ne devrait pas être exécuté
+           WRITE(C);
         }ELSE {
-           IF (B == 5) {
+           IF (B != 5) {
                C = 2; // Cible attendue
+               WRITE(C);
            }
        }
        // Après le bloc interne, on revient ici
-       A = 20; 
+       // A = 20; 
    }
    WRITE(C);
    // 1. Tests d'initialisation et promotion de type

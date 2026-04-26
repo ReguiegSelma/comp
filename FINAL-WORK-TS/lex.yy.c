@@ -902,7 +902,7 @@ YY_RULE_SETUP
 #line 57 "lexical.l"
 { 
     long val = atol(yytext);
-    if (val > 32767) {
+    if (val > 32767 || val < -32768) {
         printf("Erreur Lexicale: ligne %d, col %d, Valeur INTEGER hors limite (%s)\n", nb_lignes, nb_col, yytext);
         nb_erreurs++;
     }
@@ -937,7 +937,7 @@ case 20:
 YY_RULE_SETUP
 #line 84 "lexical.l"
 {
-    char temp[20];
+    char temp[10];
     strncpy(temp, yytext+1, yyleng-2);
     temp[yyleng-2] = '\0';
 

@@ -12,6 +12,8 @@ extern FILE *yyin;
 extern int nb_erreurs;
 
 int fin_if, deb_else;
+int if_stack[100];
+int if_top = -1;
 void yyerror(char *s);
 int nb_erreurs = 0;
 int yylex();
@@ -404,35 +406,42 @@ facteur:
         $$ = strdup("empty");
     }
     ;
-//didnt do this read it 
 COND:
-    IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD ELSE ACCOLG INSTS ACCOLD
-    {
-        /* IF + ELSE avec blocs obligatoires */
+IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD ELSE ACCOLG INSTS ACCOLD
+{
+    int bz_index = if_stack[if_top--];   // récupération du bon IF
 
-        int br_index = prochain_quad();
+    int else_quad = prochain_quad();
 
-        // saut après IF (skip ELSE)
-        quad("BR", "", "", "");
+    /* patch BZ → début ELSE */
+    char tmp1[20];
+    sprintf(tmp1, "%d", else_quad);
+    modifier_quad(bz_index, 3, tmp1);
 
-        // patch du BZ → début ELSE
-        sprintf(tmp_addr, "%d", br_index + 1);
-        modifier_quad(fin_if, 3, tmp_addr);
+    /* saut après bloc IF */
+    int fin_quad = prochain_quad();
+    quad("BR", "", "", "");
 
-        // patch du BR → fin ELSE
-        sprintf(tmp_addr, "%d", prochain_quad());
-        modifier_quad(br_index, 3, tmp_addr);
-    }
+    /* patch ELSE → fin */
+    char tmp2[20];
+    sprintf(tmp2, "%d", prochain_quad());
+    modifier_quad(else_quad, 3, tmp2);
 
-  | IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD
-    {
-        /* IF sans ELSE */
+    /* patch BR → fin */
+    char tmp3[20];
+    sprintf(tmp3, "%d", prochain_quad());
+    modifier_quad(fin_quad, 3, tmp3);
+}
+|
+IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD
+{
+    int bz_index = if_stack[if_top--];
 
-        sprintf(tmp_addr, "%d", prochain_quad());
-        modifier_quad(fin_if, 3, tmp_addr);
-    }
+    char tmp[20];
+    sprintf(tmp, "%d", prochain_quad());
+    modifier_quad(bz_index, 3, tmp);
+}
 ;
-
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
         {
@@ -500,69 +509,65 @@ BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         }
 
 EXPR_LOG: EXPR_LOG OR EXPR_LOG  { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : 0;
-            float v3 = (rechercher($3)) ? obtenir_val($3) : 0;
             $$ = new_temp(); 
             quad("OR", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 || v3) ? 1.0 : 0.0, 0);
         }
         | EXPR_LOG AND EXPR_LOG { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : 0;
-            float v3 = (rechercher($3)) ? obtenir_val($3) : 0;
             $$ = new_temp(); 
             quad("AND", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 && v3) ? 1.0 : 0.0, 0);
         }
         | NOT EXPR_LOG { 
-            float v2 = (rechercher($2)) ? obtenir_val($2) : 0;
             $$ = new_temp(); 
             quad("NOT", $2, "", $$); 
-            inserer($$, "temp", "INTEGER", (!v2) ? 1.0 : 0.0, 0);
         }
         | expression SUP expression   { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("SUP", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 > v3) ? 1.0 : 0.0, 0);
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, "");
         }
         | expression INF expression   { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("INF", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 < v3) ? 1.0 : 0.0, 0);
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, "");
         }
         | expression SUPEG expression { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("SUPEG", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 >= v3) ? 1.0 : 0.0, 0);
+
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, ""); 
         }
         | expression INFEG expression { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("INFEG", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 <= v3) ? 1.0 : 0.0, 0);
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, "");
         }
         | expression DIFF expression  { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("DIFF", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 != v3) ? 1.0 : 0.0, 0);
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, "");   
         }
         | expression EGAL expression  { 
-            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
-            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("EGAL", $1, $3, $$); 
-            inserer($$, "temp", "INTEGER", (v1 == v3) ? 1.0 : 0.0, 0);
+
+
+            if_stack[++if_top] = prochain_quad();
+            quad("BZ", "", $$, "");
         }
-        | PARG EXPR_LOG PARD    { $$ = $2; }
-        ;
+        | PARG EXPR_LOG PARD { 
+            $$ = $2; 
+        }
+;
 
 WRITE_I: WRITE PARG IDF PARD PV { 
     Symbole* s = rechercher($3);
