@@ -15,7 +15,7 @@ A = 10;
    IF (A > 0) {
        IF (B > A) {
            C = 1; // Ne devrait pas être exécuté
-       } ELSE {
+        }ELSE {
            IF (B == 5) {
                C = 2; // Cible attendue
            }
@@ -24,7 +24,6 @@ A = 10;
        A = 20; 
    }
    WRITE(C);
-
    // 1. Tests d'initialisation et promotion de type
    x = 10;        // INTEGER vers FLOAT (doit passer maintenant)
    y = 5.5;

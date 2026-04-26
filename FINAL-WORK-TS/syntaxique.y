@@ -38,8 +38,6 @@ char type_const[20];
 %left OR
 %left AND
 %right NOT
-%nonassoc LOWER_THAN_ELSE
-%nonassoc ELSE
 
 %%
 PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END 
@@ -71,7 +69,7 @@ OBJET: IDF {
         inserer($1, "idf", type_svg, 0, 0); 
      }
      | IDF CROCHG INT_VAL CROCHD { 
-        // VERIFICATION : La taille du tableau doit être > 0
+        // taille du tableau doit être > 0
         if ($3 <= 0) {
             printf("Erreur Semantique ligne %d: La taille du tableau '%s' doit etre positive (donnee: %d)\n", 
                     nb_lignes, $1, $3);
@@ -407,51 +405,33 @@ facteur:
     }
     ;
 //didnt do this read it 
-COND: IF PARG EXPR_LOG PARD 
-      { 
-        // On récupère le résultat de la condition dans la TS pour "info"
-        Symbole* s_cond = rechercher($3);
-        if (s_cond != NULL) {
-            // Optionnel : on pourrait afficher un Warning si la condition est toujours fausse
-            // if (s_cond->val == 0) printf("Warning: Condition toujours fausse ligne %d\n", nb_lignes);
-        }
+COND:
+    IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD ELSE ACCOLG INSTS ACCOLD
+    {
+        /* IF + ELSE avec blocs obligatoires */
 
-        fin_if = prochain_quad(); 
-        quad("BZ", "", $3, ""); // Saut vers ELSE ou FIN si condition fausse (0)
-      }
-      ACCOLG INSTS ACCOLD ELSE_PART 
-      {
-          // On patche le dernier saut (soit le BZ du IF, soit le BR du ELSE)
-          sprintf(tmp_addr, "%d", prochain_quad());
-          modifier_quad(fin_if, 3, tmp_addr);
-      }
-    | IF PARG error PARD
-      {
-        printf("Erreur Syntaxique ligne %d: Condition invalide\n", nb_lignes);
-        nb_erreurs++;
-        yyerrok;
-      }
-      ACCOLG INSTS ACCOLD ELSE_PART
-    ;
+        int br_index = prochain_quad();
 
-ELSE_PART: ELSE 
-           {
-             deb_else = prochain_quad();
-             quad("BR", "", "", ""); // Saut pour sauter le ELSE si le IF a été exécuté
-             
-             // On patche le BZ du IF pour qu'il pointe ICI (début du else)
-             sprintf(tmp_addr, "%d", prochain_quad());
-             modifier_quad(fin_if, 3, tmp_addr);
-             
-             // On met à jour fin_if pour qu'il contienne l'indice du BR (à patcher à la fin)
-             fin_if = deb_else; 
-           }
-           ACCOLG INSTS ACCOLD
-         | %prec LOWER_THAN_ELSE 
-           {
-             /* Partie vide : IF sans ELSE */
-           }
-         ;
+        // saut après IF (skip ELSE)
+        quad("BR", "", "", "");
+
+        // patch du BZ → début ELSE
+        sprintf(tmp_addr, "%d", br_index + 1);
+        modifier_quad(fin_if, 3, tmp_addr);
+
+        // patch du BR → fin ELSE
+        sprintf(tmp_addr, "%d", prochain_quad());
+        modifier_quad(br_index, 3, tmp_addr);
+    }
+
+  | IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD
+    {
+        /* IF sans ELSE */
+
+        sprintf(tmp_addr, "%d", prochain_quad());
+        modifier_quad(fin_if, 3, tmp_addr);
+    }
+;
 
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
