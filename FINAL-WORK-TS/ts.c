@@ -1,36 +1,40 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "ts.h"
+#include <stdio.h>    // Pour l'affichage (printf)
+#include <stdlib.h>   // Pour la mémoire (malloc/free)
+#include <string.h>   // Pour manipuler les chaînes (strcmp/strcpy)
+#include "ts.h"       // Ton plan de construction
 
 extern int nb_erreurs;
 extern int nb_lignes;
 
 /* Structures pour les différentes tables */
 typedef struct {
-    Symbole **buckets;
-    size_t capacity;
+    Symbole **buckets; // Un tableau de pointeurs , pointeur vers tableau de pointeurs
+    size_t capacity;   // Le nombre total de tiroirs
 } TS_Table;
 
-static TS_Table ts_id = {NULL, 0};
+static TS_Table ts_id = {NULL, 0}; // pas encore alloue, aucune case 
 static TS_Table ts_kw = {NULL, 0};
 static TS_Table ts_sep = {NULL, 0};
 
 /* Gestion de la pile pour WHILE/FOR */
-static int loop_start_stack[100], loop_cond_stack[100], top = -1;
+static int loop_start_stack[100], loop_cond_stack[100], top = -1; 
+//  taille fixe = 100 , pile vide 
+// stocke l’adresse de début de boucle.
+// stocke l’adresse du quadruplet conditionnel.
+
 
 unsigned long hash_str(const char *s) {
-    unsigned long h = 5381;
+    unsigned long h = 5381; // 5381 = valeur celebre (algorithme DJB2)
     int c;
-    while ((c = *s++)) h = ((h << 5) + h) + c;
+    while ((c = *s++)) h = ((h << 5) + h) + c; // parcourt chaque caractère
     return h;
 }
 
 /* Fonction générique d'insertion pour éviter la duplication de code */
 void inserer_dans_table(TS_Table *table, const char *name, const char *code, const char *type, float val, int taille) {
-    if (table->capacity == 0) {
+    if (table->capacity == 0) { // vide première insertion.  Donc créer table.
         table->capacity = 53; // Nombre premier pour limiter les collisions
-        table->buckets = calloc(table->capacity, sizeof(Symbole *));
+        table->buckets = calloc(table->capacity, sizeof(Symbole *)); // calloc(nombre, taille)
     }
     unsigned long h = hash_str(name) % table->capacity;
     
