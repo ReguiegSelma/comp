@@ -12,8 +12,6 @@ extern FILE *yyin;
 extern int nb_erreurs;
 
 int fin_if, deb_else;
-int if_stack[100];
-int if_top = -1;
 void yyerror(char *s);
 int nb_erreurs = 0;
 int yylex();
@@ -32,7 +30,7 @@ char type_const[20];
 %token PROGRAM DECL ENDDECL BEGIN_P END INTEGER FLOAT CONST IF ELSE FOR WHILE WRITE
 %token PLUS MOINS MULT DIV AFFECT SUP INF EGAL SUPEG INFEG DIFF PV DEUXPTS VIRG PARG PARD ACCOLG ACCOLD CROCHG CROCHD
 %token AND OR NOT
-%type <str> expression terme facteur EXPR_LOG 
+%type <str> expression terme facteur EXPR_LOG
 %type <reel> VAL_CONST
 
 %left PLUS MOINS
@@ -40,6 +38,9 @@ char type_const[20];
 %left OR
 %left AND
 %right NOT
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %%
 PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END 
@@ -94,7 +95,9 @@ VAL_CONST
       { $$ = (float)$1; strcpy(type_const, "INTEGER"); }
 
     | REEL_SIGNE
-      { $$ = $1; strcpy(type_const, "FLOAT");};
+      { $$ = $1; strcpy(type_const, "FLOAT");
+    
+    };
 
 INSTS: INST INSTS | ;
 INST: AFF| COND | BOUCLE | WRITE_I 
@@ -182,8 +185,8 @@ AFF:
                 nb_erreurs++;
             }
 
-            
-            // 3. Vérification des types compatibilité
+            //didnt do this 
+            // 3. Vérification des types (AMÉLIORÉE avec promotion)
             char* type_source;
             if (p_src != NULL) {
                 type_source = p_src->type;
@@ -375,24 +378,24 @@ facteur:
     }
     
     | INT_VAL { 
-    char b[20]; 
-    sprintf(b, "%d", $1); 
-    $$ = strdup(b); 
+        char b[20]; 
+        sprintf(b, "%d", $1); 
+        $$ = strdup(b); 
     }
     | FLOAT_VAL { 
-    char b[20]; 
-    sprintf(b, "%.2f", $1); 
-    $$ = strdup(b); 
+        char b[20]; 
+        sprintf(b, "%.2f", $1); 
+        $$ = strdup(b); 
     }
     | ENT_SIGNE { 
-    char b[20]; 
-    sprintf(b, "%d", $1); 
-    $$ = strdup(b); 
+        char b[20]; 
+        sprintf(b, "%d", $1); 
+        $$ = strdup(b); 
     }
     | REEL_SIGNE { 
-    char b[20]; 
-    sprintf(b, "%.2f", $1); 
-    $$ = strdup(b); 
+        char b[20]; 
+        sprintf(b, "%.2f", $1); 
+        $$ = strdup(b); 
     }
 
 /* --- Expressions entre parenthèses --- */
@@ -406,42 +409,45 @@ facteur:
         $$ = strdup("empty");
     }
     ;
-COND:
-IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD ELSE ACCOLG INSTS ACCOLD
-{
-    int bz_index = if_stack[if_top--];   // récupération du bon IF
+//didnt do this read it 
+COND: IF PARG EXPR_LOG PARD 
+      { 
+        // 1. On réserve le saut si la condition est fausse
+        fin_if = prochain_quad(); 
+        quad("BZ", "", $3, ""); 
+      }
+      ACCOLG INSTS ACCOLD // <--- Bison va d'abord générer les quads de INSTS ici
+      {
+        // 2. On est à la fin du bloc IF (après INSTS)
+        // On génère le saut pour sortir du bloc (éviter le ELSE)
+        deb_else = prochain_quad();
+        quad("BR", "", "", ""); 
 
-    int else_quad = prochain_quad();
+        // 3. On patche le BZ pour qu'il pointe ICI (début du ELSE)
+        sprintf(tmp_addr, "%d", prochain_quad());
+        modifier_quad(fin_if, 3, tmp_addr);
 
-    /* patch BZ → début ELSE */
-    char tmp1[20];
-    sprintf(tmp1, "%d", else_quad);
-    modifier_quad(bz_index, 3, tmp1);
+        // 4. On prépare fin_if pour le patch final du BR
+        fin_if = deb_else; 
+      }
+      ELSE_PART_MODIF 
+    ;
 
-    /* saut après bloc IF */
-    int fin_quad = prochain_quad();
-    quad("BR", "", "", "");
+// On crée une règle simplifiée pour la fin
+ELSE_PART_MODIF: ELSE ACCOLG INSTS ACCOLD
+      {
+          // On patche le BR de sortie
+          sprintf(tmp_addr, "%d", prochain_quad());
+          modifier_quad(fin_if, 3, tmp_addr);
+      }
+    | %prec LOWER_THAN_ELSE 
+      {
+          // Même si pas de ELSE, on patche le BR de sortie vers la suite
+          sprintf(tmp_addr, "%d", prochain_quad());
+          modifier_quad(fin_if, 3, tmp_addr);
+      }
+    ;
 
-    /* patch ELSE → fin */
-    char tmp2[20];
-    sprintf(tmp2, "%d", prochain_quad());
-    modifier_quad(else_quad, 3, tmp2);
-
-    /* patch BR → fin */
-    char tmp3[20];
-    sprintf(tmp3, "%d", prochain_quad());
-    modifier_quad(fin_quad, 3, tmp3);
-}
-|
-IF PARG EXPR_LOG PARD ACCOLG INSTS ACCOLD
-{
-    int bz_index = if_stack[if_top--];
-
-    char tmp[20];
-    sprintf(tmp, "%d", prochain_quad());
-    modifier_quad(bz_index, 3, tmp);
-}
-;
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
         {
@@ -509,65 +515,69 @@ BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         }
 
 EXPR_LOG: EXPR_LOG OR EXPR_LOG  { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : 0;
+            float v3 = (rechercher($3)) ? obtenir_val($3) : 0;
             $$ = new_temp(); 
             quad("OR", $1, $3, $$); 
+            inserer($$, "temp", "INTEGER", (v1 || v3) ? 1.0 : 0.0, 0);
         }
         | EXPR_LOG AND EXPR_LOG { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : 0;
+            float v3 = (rechercher($3)) ? obtenir_val($3) : 0;
             $$ = new_temp(); 
             quad("AND", $1, $3, $$); 
+            inserer($$, "temp", "INTEGER", (v1 && v3) ? 1.0 : 0.0, 0);
         }
         | NOT EXPR_LOG { 
+            float v2 = (rechercher($2)) ? obtenir_val($2) : 0;
             $$ = new_temp(); 
             quad("NOT", $2, "", $$); 
+            inserer($$, "temp", "INTEGER", (!v2) ? 1.0 : 0.0, 0);
         }
         | expression SUP expression   { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("SUP", $1, $3, $$); 
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, "");
+            inserer($$, "temp", "INTEGER", (v1 > v3) ? 1.0 : 0.0, 0);
         }
         | expression INF expression   { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("INF", $1, $3, $$); 
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, "");
+            inserer($$, "temp", "INTEGER", (v1 < v3) ? 1.0 : 0.0, 0);
         }
         | expression SUPEG expression { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("SUPEG", $1, $3, $$); 
-
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, ""); 
+            inserer($$, "temp", "INTEGER", (v1 >= v3) ? 1.0 : 0.0, 0);
         }
         | expression INFEG expression { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("INFEG", $1, $3, $$); 
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, "");
+            inserer($$, "temp", "INTEGER", (v1 <= v3) ? 1.0 : 0.0, 0);
         }
         | expression DIFF expression  { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("DIFF", $1, $3, $$); 
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, "");   
+            inserer($$, "temp", "INTEGER", (v1 != v3) ? 1.0 : 0.0, 0);
         }
         | expression EGAL expression  { 
+            float v1 = (rechercher($1)) ? obtenir_val($1) : atof($1);
+            float v3 = (rechercher($3)) ? obtenir_val($3) : atof($3);
             $$ = new_temp(); 
             quad("EGAL", $1, $3, $$); 
-
-
-            if_stack[++if_top] = prochain_quad();
-            quad("BZ", "", $$, "");
+            inserer($$, "temp", "INTEGER", (v1 == v3) ? 1.0 : 0.0, 0);
         }
-        | PARG EXPR_LOG PARD { 
-            $$ = $2; 
-        }
-;
+        | PARG EXPR_LOG PARD    { $$ = $2; }
+        ;
 
 WRITE_I: WRITE PARG IDF PARD PV { 
     Symbole* s = rechercher($3);
@@ -576,6 +586,7 @@ WRITE_I: WRITE PARG IDF PARD PV {
         nb_erreurs++;
     } else {
         // Affiche le nom ET la valeur stockée dans la TS au moment de la compilation
+        quad("WRITE", $3, "", "");
         printf(" Variable %s = %.2f\n", s->name, s->val);
     }
 }

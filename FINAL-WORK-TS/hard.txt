@@ -8,24 +8,22 @@ DECL
 ENDDECL
 BEGIN
 
-A = 10;
+   A = 10;
    B = 5;
    C = 0;
+   i=0;
 
-   IF (A > 0) {
-       IF (B > A) {
-           A= 3; // Ne devrait pas être exécuté
-           WRITE(C);
-        }ELSE {
-           IF (B != 5) {
+   IF (A < 0) {
+           // Après le bloc interne, on revient ici
+       // A = 20; 
+        WRITE(C);
+    }ELSE {
                C = 2; // Cible attendue
                WRITE(C);
-           }
        }
-       // Après le bloc interne, on revient ici
-       // A = 20; 
-   }
-   WRITE(C);
+    IF (B !=5){
+        B=B+1;
+    }
    // 1. Tests d'initialisation et promotion de type
    x = 10;        // INTEGER vers FLOAT (doit passer maintenant)
    y = 5.5;
