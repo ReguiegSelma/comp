@@ -133,14 +133,13 @@ AFF:
                 val_src = atof($3);
             }
 
-            // 2. Vérification de compatibilité avec promotion (INT -> FLOAT)
+            // 2. Vérification de compatibilité avec (INT -> FLOAT)
             int compatible = 0;
             if (strcmp(s1->type, type_src) == 0) {
                 compatible = 1; // Même type (INT=INT ou FLOAT=FLOAT)
             } else if (strcmp(s1->type, "FLOAT") == 0 && strcmp(type_src, "INTEGER") == 0) {
                 compatible = 1; // Promotion : FLOAT = INTEGER (OK)
             }
-
             if (!compatible) {
                 printf("Erreur Semantique ligne %d: Incompatibilite de type entre %s (%s) et %s (%s)\n", 
                         nb_lignes, $1, s1->type, $3, type_src);
@@ -151,15 +150,9 @@ AFF:
             mettre_a_jour_val($1, val_src);
             quad("=", $3, "", $1);
         }
-    }
-/* --- Cas 2 : Erreur sur l'expression simple --- 
-| IDF AFFECT error PV {
-        printf("Erreur Syntaxique: ligne %d, col %d expression invalide\n", nb_lignes, nb_col);
-        nb_erreurs++;
-        yyerrok;
-    } */     
+    }    
 
-/* --- Cas 3 : Affectation Tableau (t[i] = expr) --- */
+/* --- Cas 2 : Affectation Tableau (t[i] = expr) --- */
     | IDF CROCHG expression CROCHD AFFECT expression PV { 
         Symbole* p = rechercher($1);     // Recherche du tableau
         Symbole* p_idx = rechercher($3); // Recherche si l'indice est une variable
@@ -176,17 +169,15 @@ AFF:
                 nb_erreurs++;
             } 
             
-            // 2. Vérification de la borne (si l'indice est un nombre constant)(Indice statique ou dynamique calculé)
+            // 2. Vérification de la borne (si l'indice est un nombre constant)(i+1, a )
             // On convertit le texte de l'indice en entier pour comparer
-            float v_idx = (p_idx) ? p_idx->val : atof($3);
+            float v_idx = (p_idx) ? p_idx->val : atof($3);//pour verifier avec les bornnes dans la ts
             if (v_idx >= p->taille || v_idx < 0) {
                 printf("Erreur Semantique ligne %d: index %.0f hors limites pour '%s' (taille %d)\n", 
                         nb_lignes, v_idx, $1, p->taille);
                 nb_erreurs++;
-            }
-
-            //didnt do this 
-            // 3. Vérification des types (AMÉLIORÉE avec promotion)
+            } 
+            // 3. Vérification des types
             char* type_source;
             if (p_src != NULL) {
                 type_source = p_src->type;
@@ -194,14 +185,12 @@ AFF:
                 // Détecter le type si c'est une valeur brute (chiffre)
                 type_source = (strchr($6, '.')) ? "FLOAT" : "INTEGER";
             }
-
             int compatible = 0;
             if (strcmp(p->type, type_source) == 0) {
                 compatible = 1; // Types identiques
             } else if (strcmp(p->type, "FLOAT") == 0 && strcmp(type_source, "INTEGER") == 0) {
                 compatible = 1; // Promotion : Tableau FLOAT accepte INTEGER
             }
-
             if (!compatible) {
                 printf("Erreur Semantique ligne %d: incompatibilite de type entre le tableau %s (%s) et %s (%s)\n", 
                         nb_lignes, $1, p->type, $6, type_source);
@@ -209,15 +198,14 @@ AFF:
             }
 
             // 4. Génération du quadruplet
-            // Note : Pour les tableaux, on ne met pas à jour 'val' car la TS 
-            // ne stocke qu'une valeur simple, pas tout le contenu du tableau.
+            // ne stocke qu'une valeur simple, pas tout le contenu du tableau
             char res[40];
             sprintf(res, "%s[%s]", $1, $3);
             quad("=", $6, "", res);
         }
     }
 
-    /* --- Cas 4 : Erreurs de rattrapage Tableau --- */
+    /* --- Cas 4 : Erreurs de indice Tableau --- */
    | IDF CROCHG error CROCHD AFFECT expression PV {
         printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
@@ -318,7 +306,7 @@ terme: terme MULT facteur {
      ;
 
 facteur: 
-    /* --- Identifiant simple (avec vérification si c'est un tableau) --- */
+    /* --- Identifiant simple (vérification si c'est un tableau) --- */
     IDF { 
         Symbole* s = rechercher($1);
         if (s == NULL) {
@@ -349,7 +337,7 @@ facteur:
                 nb_erreurs++;
                 $$ = strdup("empty");
             } else {
-                // Si l'index est valide (pas empty), on vérifie la borne statiquement
+                // Si l'index est valide (pas empty), on vérifie la borne
                 if (strcmp($3, "empty") != 0) {
                     // On récupère la valeur numérique de l'index (soit le chiffre, soit la valeur de la variable)
                     float v_idx = (rechercher($3)) ? obtenir_val($3) : atof($3);
@@ -369,7 +357,7 @@ facteur:
             }
         }
     }
-/* --- Rattrapage d'erreur sur l'index du tableau --- */
+    /* --- l'indice du tableau --- */
     | IDF CROCHG error CROCHD {
         printf("Erreur Syntaxique: ligne %d , col %d index invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
@@ -401,7 +389,7 @@ facteur:
 /* --- Expressions entre parenthèses --- */
     | PARG expression PARD { $$ = $2; }
 
-    /* --- Rattrapage d'erreur sur parenthèses --- */
+    /* --- erreur dans l'expression --- */
     | PARG error PARD {
         printf("Erreur Syntaxique: ligne %d , col %d expression invalide \n", nb_lignes, nb_col);
         nb_erreurs++;
@@ -409,14 +397,15 @@ facteur:
         $$ = strdup("empty");
     }
     ;
-//didnt do this read it 
+
+
 COND: IF PARG EXPR_LOG PARD 
       { 
         // 1. On réserve le saut si la condition est fausse
         fin_if = prochain_quad(); 
         quad("BZ", "", $3, ""); 
       }
-      ACCOLG INSTS ACCOLD // <--- Bison va d'abord générer les quads de INSTS ici
+      ACCOLG INSTS ACCOLD //  Bison va d'abord générer les quads de INSTS ici
       {
         // 2. On est à la fin du bloc IF (après INSTS)
         // On génère le saut pour sortir du bloc (éviter le ELSE)
@@ -453,7 +442,7 @@ BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         {
            int q_bz = prochain_quad();
            quad("BZ", "", $4, ""); 
-           push_loop_cond(q_bz); // On mémorise l'adresse du BZ pour le patcher
+           push_loop_cond(q_bz); // On mémorise l'adresse du BZ pour l'utiliser 
         }
         ACCOLG INSTS ACCOLD
         {
