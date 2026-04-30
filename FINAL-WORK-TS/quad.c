@@ -5,7 +5,7 @@
 
 quad_struct quad_table[1000];
 int qc = 0;     // Compteur de quadruplets
-int temp_c = 1; // Compteur de temporaires T1, T2...
+int temp_c = 1; // Compteur de temporaires T1, T2
 
 void quad(char *op, char *op1, char *op2, char *res)
 {

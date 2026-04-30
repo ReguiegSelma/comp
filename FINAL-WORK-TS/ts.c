@@ -66,8 +66,7 @@ void inserer_dans_table(TS_Table *table, const char *name, const char *code, con
     s->next = table->buckets[h];
     table->buckets[h] = s;
 }
-
-/* Fonctions demandées par le compilateur */
+// inserer dans ts 
 void inserer(const char *name, const char *code, const char *type, float val, int taille) {
     inserer_dans_table(&ts_id, name, code, type, val, taille);
 }
