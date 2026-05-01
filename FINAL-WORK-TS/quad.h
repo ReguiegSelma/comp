@@ -9,6 +9,8 @@ typedef struct
     char *res;
 } quad_struct;
 
+extern int qc;
+extern quad_struct quad_table[1000]; 
 // Fonctions principales
 void quad(char *op, char *op1, char *op2, char *res);
 void afficher_quads();

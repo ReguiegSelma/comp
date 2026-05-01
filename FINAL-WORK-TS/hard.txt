@@ -1,11 +1,13 @@
 PROGRAM Test
 DECL
-   INTEGER : A,B,C;
+   INTEGER : A,B;
 ENDDECL
 BEGIN
 
+A=2;
+B=6;
 
-WHILE (A < 3) {
+IF (A < 3) {
     IF (B !=5)
     {A=2;}
     ELSE {

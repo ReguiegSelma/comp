@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "ts.h"
 #include "quad.h"
+#include "opti.h"
 
 extern int nb_lignes;
 extern int nb_col;
@@ -48,6 +49,7 @@ PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END
         if(nb_erreurs == 0){
             printf("Syntaxe Correcte\n");
             afficher_quads();
+            optimiser_code();  // Optimisation complète
             YYACCEPT;
         }else{
             printf("\n Compilation echouee : %d erreur(s) detectee(s)\n", nb_erreurs);
@@ -398,45 +400,47 @@ facteur:
     }
     ;
 
-
 COND: IF PARG EXPR_LOG PARD 
       { 
-        // 1. On réserve le saut si la condition est fausse
-        fin_if = prochain_quad(); 
+        // 1. On génère le saut si FAUX (BZ)
+        // On empile l'indice du quad pour le modifier plus tard
+        push_if(prochain_quad()); 
         quad("BZ", "", $3, ""); 
       }
-      ACCOLG INSTS ACCOLD //  Bison va d'abord générer les quads de INSTS ici
+      ACCOLG INSTS ACCOLD 
       {
-        // 2. On est à la fin du bloc IF (après INSTS)
-        // On génère le saut pour sortir du bloc (éviter le ELSE)
-        deb_else = prochain_quad();
-        quad("BR", "", "", ""); 
-
-        // 3. On patche le BZ pour qu'il pointe ICI (début du ELSE)
-        sprintf(tmp_addr, "%d", prochain_quad());
-        modifier_quad(fin_if, 3, tmp_addr);
-
-        // 4. On prépare fin_if pour le patch final du BR
-        fin_if = deb_else; 
+        // 2. Fin du bloc IF : on doit sauter par-dessus le ELSE
+        int q_bz = pop_if(); // On récupère l'adresse du BZ
+        
+        int q_br = prochain_quad();
+        quad("BR", "", "", ""); // Saut inconditionnel vers la fin
+        push_if(q_br); // On empile ce BR pour le patcher à la fin du ELSE
+        
+        // 3. On patche le BZ pour qu'il pointe vers le début du ELSE (ici)
+        char tmp[10];
+        sprintf(tmp, "%d", prochain_quad());
+        modifier_quad(q_bz, 3, tmp);
       }
       ELSE_PART_MODIF 
     ;
 
-// On crée une règle simplifiée pour la fin
 ELSE_PART_MODIF: ELSE ACCOLG INSTS ACCOLD
       {
-          // On patche le BR de sortie
-          sprintf(tmp_addr, "%d", prochain_quad());
-          modifier_quad(fin_if, 3, tmp_addr);
+        // 4. On patche le BR de sortie du bloc IF
+        int q_br = pop_if();
+        char tmp[10];
+        sprintf(tmp, "%d", prochain_quad());
+        modifier_quad(q_br, 3, tmp);
       }
     | %prec LOWER_THAN_ELSE 
       {
-          // Même si pas de ELSE, on patche le BR de sortie vers la suite
-          sprintf(tmp_addr, "%d", prochain_quad());
-          modifier_quad(fin_if, 3, tmp_addr);
+        // Cas sans ELSE : on patche quand même le BR généré
+        int q_br = pop_if();
+        char tmp[10];
+        sprintf(tmp, "%d", prochain_quad());
+        modifier_quad(q_br, 3, tmp);
       }
     ;
-
 BOUCLE: WHILE { push_loop_start(prochain_quad()); }
         PARG EXPR_LOG PARD 
         {

@@ -36,5 +36,7 @@ void push_loop_start(int addr);
 int pop_loop_start();
 void push_loop_cond(int addr);
 int pop_loop_cond();
+void push_if(int q);
+int pop_if();
 
 #endif

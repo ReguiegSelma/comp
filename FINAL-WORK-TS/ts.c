@@ -18,6 +18,7 @@ static TS_Table ts_sep = {NULL, 0};
 
 /* Gestion de la pile pour WHILE/FOR */
 static int loop_start_stack[100], loop_cond_stack[100], top = -1; 
+int stack_if[100]; int top_if = -1;
 //  taille fixe = 100 , pile vide 
 // stocke l’adresse de début de boucle.
 // stocke l’adresse du quadruplet conditionnel.
@@ -39,7 +40,7 @@ void inserer_dans_table(TS_Table *table, const char *name, const char *code, con
     unsigned long h = hash_str(name) % table->capacity;
     
     // Vérification de double déclaration (uniquement pour les IDs)
-    for (Symbole *cur = table->buckets[h]; cur; cur = cur->next) {
+    for (Symbole *cur = table->buckets[h]; cur; cur = cur->next) {//cur commence de tete jusqua null
         if (strcmp(cur->name, name) == 0) {
             if (table == &ts_id && strcmp(code, "temp") != 0) { 
                 // On ne signale pas d'erreur pour les temporaires réutilisés
@@ -60,13 +61,13 @@ void inserer_dans_table(TS_Table *table, const char *name, const char *code, con
     
     strncpy(s->type, type, 19);
     s->type[19] = '\0';
-
     s->val = val; 
     s->taille = taille;
     s->next = table->buckets[h];
     table->buckets[h] = s;
 }
-// inserer dans ts 
+
+//insertion dans la ts
 void inserer(const char *name, const char *code, const char *type, float val, int taille) {
     inserer_dans_table(&ts_id, name, code, type, val, taille);
 }
@@ -89,7 +90,7 @@ Symbole* rechercher(const char *name) {
 }
 
 
-/*--- LOGIQUE DE MISE À JOUR (Propagation) ---*/
+/*--- LOGIQUE DE MISE A JOUR  ---*/
 
 void mettre_a_jour_val(const char *name, float v) {
     Symbole *s = rechercher(name);
@@ -110,6 +111,8 @@ void push_loop_start(int addr) { loop_start_stack[++top] = addr; }
 int pop_loop_start() { return loop_start_stack[top]; }
 void push_loop_cond(int addr) { loop_cond_stack[top] = addr; }
 int pop_loop_cond() { return loop_cond_stack[top--]; }
+void push_if(int q) { stack_if[++top_if] = q; }
+int pop_if() { return stack_if[top_if--]; }
 
 /* Fonctions d'affichage */
 void afficher_ts_ids() {

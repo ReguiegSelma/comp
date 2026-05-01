@@ -1,0 +1,28 @@
+PROGRAM test
+DECL
+    INTEGER: x, y, z, i;
+    CONST a = 5;
+    CONST b = 10;
+ENDDECL
+
+BEGIN
+    // Test 1: Expressions communes
+    x = a + b;
+    y = a + b;  // Même expression que x
+    
+    // Test 2: Propagation de constantes
+    z = 3 + 7;  // Peut être évalué à la compilation
+    i = z * 2;  // z est constant
+    
+    // Test 3: Code mort
+    x = x + 1;
+    y = 100;    // x+1 jamais utilisé (code mort)
+    
+    // Test 4: Boucle avec calcul invariant
+    FOR (i:1:10:1) {
+        x = 5 * 2;  // Invariant (toujours 10)
+        y = x + i;
+    }
+    
+    WRITE(y);
+END
