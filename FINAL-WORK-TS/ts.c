@@ -5,7 +5,7 @@
 
 extern int nb_erreurs;
 extern int nb_lignes;
-
+extern int temp_c;
 /* Structures pour les différentes tables */
 typedef struct
 {
@@ -122,6 +122,35 @@ float obtenir_val(const char *name)
     if (s)
         return s->val;
     return 0;
+}
+
+void ecrire_ds(FILE* f) {
+    if (f == NULL) return;
+
+    fprintf(f, "  ; --- Variables et Temporaires de la TS ---\n");
+    
+    // 1. On parcourt la table de hachage normalement
+    if (ts_id.capacity > 0) {
+        for (size_t i = 0; i < ts_id.capacity; i++) {
+            Symbole *cur = ts_id.buckets[i];
+            while (cur != NULL) {
+                // On écrit toutes les variables trouvées (y compris les T1, T2 mis par le compilo)
+                if (cur->taille > 1) {
+                    fprintf(f, "  %s DW %d DUP(0)\n", cur->name, cur->taille);
+                } else {
+                    fprintf(f, "  %s DW ?\n", cur->name);
+                }
+                cur = cur->next;
+            }
+        }
+    }
+
+    // 2. Parcourir et déclarer les temporaires (T1, T2, ...)
+    // On utilise la variable globale qui compte vos temporaires
+    /*fprintf(f, "  ; --- Temporaires ---\n");
+    for (int j = 1; j <= temp_c; j++) {
+        fprintf(f, "  T%d DW ?\n", j);
+    }*/
 }
 
 /* Gestion de la pile */

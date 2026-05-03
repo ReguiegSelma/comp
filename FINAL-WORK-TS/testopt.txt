@@ -1,28 +1,52 @@
-PROGRAM test
+PROGRAM Super
 DECL
-    INTEGER: x, y, z, i;
-    CONST a = 5;
-    CONST b = 10;
+    INTEGER: a, b, c, x, y, z, i, j;
+    CONST k = 10;
 ENDDECL
 
 BEGIN
-    // Test 1: Expressions communes
-    x = a + b;
-    y = a + b;  // Même expression que x
+    // --- 1. Expressions Communes & Propagation de Copies ---
+    a = x + y;
+    b = x + y;       // A OPTIMISER : b = a (si x et y n'ont pas changé)
     
-    // Test 2: Propagation de constantes
-    z = 3 + 7;  // Peut être évalué à la compilation
-    i = z * 2;  // z est constant
-    // Test 3: Code mort
-    x = x + 1;
-    y = 100;    // x+1 jamais utilisé (code mort)
-    i=0;
-    // Test 4: Boucle avec calcul invariant
-    WHILE (i<= 10) {
-        x = 5 * 2;  // Invariant (toujours 10)
-        y = x + i;
-        i=i+1;
+    // --- 2. Propagation & Folding (Calcul Constante) ---
+    x = 2 + 3;       // A OPTIMISER : x = 5
+    y = x * 4;       // A OPTIMISER : y = 20
+    
+    // --- 3. Code Mort & Analyse de Vivacité ---
+    z = a * 2;       // A OPTIMISER : Suppression (z est écrasé juste après)
+    z = 50;          // A LAISSER : z est utilisé dans le WRITE final
+    
+    c = b + 1;       // A OPTIMISER : Suppression (c n'est jamais lu)
+    
+    // --- 4. Le Piège de la Réaffectation (Interdit d'optimiser) ---
+    x = 10;
+    a = x + 5;       // Ici a = 15
+    x = 20;          // Réaffectation de x
+    b = x + 5;       // A LAISSER IMPERATIVEMENT : b doit valoir 25, pas 15 !
+    
+    // --- 5. Boucle WHILE (Structure de contrôle) ---
+    i = 0;
+    WHILE (i < k) {
+        // Invariant de boucle
+        x = 5 * 2;   // A OPTIMISER : Sortir de la boucle (x = 10)
+        
+        // Dépendance de boucle (Interdit de propager i)
+        y = x + i;   // A LAISSER IMPERATIVEMENT : i change à chaque tour
+        
+        i = i + 1;   // A LAISSER IMPERATIVEMENT : Compteur de boucle
     }
-    
+
+    // --- 6. Le Piège du Saut (Analyse de Flux) ---
+    IF (a < 100) {
+        x = 1;
+    } ELSE {
+        x = 2;
+    }
+    // A LAISSER IMPERATIVEMENT : On ne peut pas propager x ici 
+    // car sa valeur dépend du chemin pris (IF ou ELSE).
+    z = x + 10;      
+
+    WRITE(z);
     WRITE(y);
 END

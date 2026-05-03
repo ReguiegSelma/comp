@@ -5,6 +5,7 @@
 #include "ts.h"
 #include "quad.h"
 #include "opti.h"
+#include "asm.h"
 
 extern int nb_lignes;
 extern int nb_col;
@@ -50,6 +51,7 @@ PROG: PROGRAM IDF DECL DECLS ENDDECL BEGIN_P INSTS END
             printf("Syntaxe Correcte\n");
             afficher_quads();
             optimiser_code();  // Optimisation complète
+            generer_assembleur("code.asm"); // Génère le fichier final
             YYACCEPT;
         }else{
             printf("\n Compilation echouee : %d erreur(s) detectee(s)\n", nb_erreurs);

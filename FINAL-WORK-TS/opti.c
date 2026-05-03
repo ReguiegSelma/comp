@@ -71,6 +71,7 @@ int est_constante(char *operande)
 
     return has_digit; // Au moins un chiffre trouve
 }
+
 int est_utilise(char *var, int debut)
 {
     for (int i = debut + 1; i < qc; i++)
@@ -99,12 +100,44 @@ int est_utilise(char *var, int debut)
     }
     return 0;
 }
+
 int est_saut(char *op)
 {
     return strcmp(op, "BR") == 0 ||
            strcmp(op, "BZ") == 0 ||
            strcmp(op, "BNZ") == 0 ||
            strcmp(op, "BG") == 0;
+}
+
+int est_vivante(char* var, int index_actuel) {
+    for (int j = index_actuel + 1; j < qc; j++) {
+        // 1. UTILISATION : La variable est lue, elle est donc vivante.
+        if (strcmp(quad_table[j].op1, var) == 0 || 
+            strcmp(quad_table[j].op2, var) == 0) {
+            return 1; 
+        }
+
+        // 2. RÉAFFECTATION : La variable est écrasée avant d'être lue.
+        // On ne renvoie 0 QUE SI on est sûr que ce chemin est obligatoire.
+        if (strcmp(quad_table[j].res, var) == 0) {
+            // Si on rencontre une affectation de 'var' dans un bloc linéaire,
+            // alors l'affectation précédente à 'index_actuel' est morte.
+            return 0; 
+        }
+
+        // 3. SÉCURITÉ FLUX DE CONTRÔLE (Correction majeure) :
+        // Si on rencontre un saut (BZ, BG, BR, etc.), on ne peut plus garantir 
+        // le chemin linéaire. On considère la variable vivante pour ne rien casser.
+        if (est_saut(quad_table[j].op)) {
+            // Un saut (avant ou arrière) signifie que le code peut bifurquer.
+            // On arrête l'analyse et on déclare la variable vivante par sécurité.
+            return 1; 
+        }
+        
+        // Optionnel : Si un autre quadruplet pointe vers 'j' (étiquette), 
+        // il faut aussi arrêter et retourner 1.
+    }
+    return 0; // Variable jamais réutilisée jusqu'à la fin du programme.
 }
 
 void mettre_a_jour_adresses_sauts(int index_supprime) {
@@ -297,21 +330,25 @@ void suppression_code_mort() {
     int nb_suppressions = 0;
 
     for (int i = 0; i < qc; i++) {
-        // Condition de suppression : Ti non utilisé et pas d'effet de bord
-        if (strlen(quad_table[i].res) > 0 && quad_table[i].res[0] == 'T') {
-            if (!est_utilise(quad_table[i].res, i)) {
+        char* var_dest = quad_table[i].res;
+
+        // On vérifie les instructions qui affectent une valeur (opérations ou =)
+        // On exclut les instructions de saut ou de sortie (WRITE)
+        if (strlen(var_dest) > 0 && !est_saut(quad_table[i].op) && strcmp(quad_table[i].op, "WRITE") != 0) {
+            
+            // ANALYSE : Si la variable n'est plus vivante après cette ligne
+            if (!est_vivante(var_dest, i)) {
                 
-                printf("  Quad %d: Suppression de %s (inutile)\n", i, quad_table[i].res);
+                printf("  Quad %d: Suppression de l'affectation a %s (ecrasee ou inutilisee)\n", i, var_dest);
                 
-                // Mettre à jour tous les sauts qui pointent plus loin que i
                 mettre_a_jour_adresses_sauts(i);
 
-                // Décalage physique
+                // Décalage physique du tableau de quadruplets
                 for (int k = i; k < qc - 1; k++) {
                     quad_table[k] = quad_table[k + 1];
                 }
                 qc--;
-                i--; // Re-vérifier l'index actuel
+                i--; // On recule pour analyser le nouveau quadruplet à cet index
                 nb_suppressions++;
             }
         }
