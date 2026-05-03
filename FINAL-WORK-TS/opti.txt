@@ -535,3 +535,21 @@ void optimiser_code()
     printf("\n--- CODE OPTIMISe FINAL ---\n");
     afficher_quads();
 }
+
+--- QUADRUPLETS GENERES ---
+0 - ( +, a, b, T1 )
+1 - ( =, T1, , x )
+2 - ( =, T1, , T2 )
+3 - ( =, T2, , y )// y=T1
+4 - ( =, 10.00, , z )
+5 - ( =, 20.00, , i )
+6 - ( +, x, 1, T5 )
+7 - ( =, T5, , x )
+8 - ( =, 100, , y )
+9 - ( =, 0, , i )
+10 - ( INFEG, 0, 10, T6 )
+11 - ( BZ, , T6, 15 )
+12 - ( =, 10.00, , x )
+13 - ( =, 10.00, , y )
+14 - ( BR, , , 10 )
+15 - ( WRITE, y, ,  )

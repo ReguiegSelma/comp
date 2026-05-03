@@ -21,10 +21,6 @@ void sauvegarder_etat()
     qc_precedent = qc;
 }
 
-/**
- * Compare l'etat actuel avec l'etat precedent
- * @return 1 si identique (pas de changement), 0 sinon
- */
 int comparer_quads()
 {
     if (qc != qc_precedent)
@@ -43,11 +39,6 @@ int comparer_quads()
     return 1; // Aucun changement
 }
 
-/**
- * Verifie si une chaîne represente une constante numerique
- * @param operande La chaîne à verifier
- * @return 1 si c'est une constante, 0 sinon
- */
 int est_constante(char *operande)
 {
     if (operande == NULL || strlen(operande) == 0)
@@ -80,13 +71,6 @@ int est_constante(char *operande)
 
     return has_digit; // Au moins un chiffre trouve
 }
-
-/**
- * Verifie si une variable est utilisee après un certain quadruplet
- * @param var Le nom de la variable
- * @param debut L'indice à partir duquel chercher
- * @return 1 si utilisee, 0 sinon
- */
 int est_utilise(char *var, int debut)
 {
     for (int i = debut + 1; i < qc; i++)
@@ -135,6 +119,7 @@ void mettre_a_jour_adresses_sauts(int index_supprime) {
         }
     }
 }
+
 void elimination_expressions_communes()
 {
     printf("\netape 1: elimination des expressions communes\n");
@@ -199,7 +184,7 @@ void elimination_expressions_communes()
 
 void propagation_constantes()
 {
-    printf("\n=== eTAPE 2: Propagation des constantes ===\n");
+    printf("\n=== etape 2: Propagation des constantes ===\n");
     int nb_optimisations = 0;
 
     // Parcourir tous les quadruplets
@@ -265,11 +250,11 @@ for (int i = 0; i < qc; i++) {
 }
 
 void suppression_code_mort() {
-    printf("\n=== ETAPE 3: Suppression du code mort ===\n");
+    printf("\n=== etape 3: Suppression du code mort ===\n");
     int nb_suppressions = 0;
 
     for (int i = 0; i < qc; i++) {
-        // Condition de suppression : T_i non utilisé et pas d'effet de bord
+        // Condition de suppression : Ti non utilisé et pas d'effet de bord
         if (strlen(quad_table[i].res) > 0 && quad_table[i].res[0] == 'T') {
             if (!est_utilise(quad_table[i].res, i)) {
                 
@@ -294,7 +279,7 @@ void suppression_code_mort() {
 
 void optimisation_boucles()
 {
-    printf("\n=== eTAPE 4: Optimisation des boucles ===\n");
+    printf("\n=== etape 4: Optimisation des boucles ===\n");
     int nb_optimisations = 0;
 
     // Identifier les boucles (BR qui sautent vers l'arrière)
