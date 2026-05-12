@@ -5,13 +5,19 @@ DATA SEGMENT
   T12 DW ?
   T13 DW ?
   T14 DW ?
+  T15 DW ?
+  T16 DW ?
+  T17 DW ?
+  T18 DW ?
+  T19 DW ?
   a DW ?
   b DW ?
   c DW ?
   i DW ?
   j DW ?
-  k DW ?
+  n DW ?
   T1 DW ?
+  p DW ?
   T2 DW ?
   T3 DW ?
   T4 DW ?
@@ -38,88 +44,94 @@ START:
   MOV AX, DATA
   MOV DS, AX
 
-L0: MOV AX, x
-  ADD AX, y
-  MOV T1, AX
-L1: MOV AX, T1
-  MOV T2, AX
-L2: MOV AX, 5
-  MOV T3, AX
-L3: MOV AX, 20
-  MOV T4, AX
-L4: MOV AX, 20
-  MOV y, AX
-L5: MOV AX, T1
-  MOV BX, 2
-  MUL BX
-  MOV T5, AX
-L6: MOV AX, 50
-  MOV z, AX
-L7: MOV AX, T1
-  ADD AX, 1
-  MOV T6, AX
-L8: MOV AX, T6
-  MOV c, AX
-L9: MOV AX, 10
+L0: MOV AX, 10
   MOV x, AX
-L10: MOV AX, x
+L1: MOV AX, x
   ADD AX, 5
-  MOV T7, AX
-L11: MOV AX, T7
-  MOV a, AX
-L12: MOV AX, 20
-  MOV x, AX
-L13: MOV AX, T7
   MOV T8, AX
-L14: MOV AX, T7
+L2: MOV AX, T8
+  MOV a, AX
+L3: MOV AX, 20
+  MOV x, AX
+L4: MOV AX, x
+  ADD AX, 5
+  MOV T9, AX
+L5: MOV AX, T9
   MOV b, AX
-L15: MOV AX, 0
+L6: MOV AX, 0
   MOV i, AX
-L16: MOV AX, i
-  CMP AX, k
-  JL VRAI_16
-  MOV T9, 0
-  JMP FIN_CMP_16
-VRAI_16: MOV T9, 1
-FIN_CMP_16: NOP
-L17: MOV AX, T9
-  CMP AX, 0
-  JE L25
-L18: MOV AX, 10
-  MOV T10, AX
-L19: MOV AX, T10
+L7: MOV AX, 10
   MOV x, AX
-L20: MOV AX, T10
+L8: MOV AX, i
+  CMP AX, p
+  JL VRAI_8
+  MOV T10, 0
+  JMP FIN_CMP_8
+VRAI_8: MOV T10, 1
+FIN_CMP_8: NOP
+L9: MOV AX, T10
+  CMP AX, 0
+  JE L15
+L10: MOV AX, x
   ADD AX, i
-  MOV T11, AX
-L21: MOV AX, T11
-  MOV y, AX
-L22: MOV AX, i
-  ADD AX, 1
   MOV T12, AX
-L23: MOV AX, T12
+L11: MOV AX, T12
+  MOV y, AX
+L12: MOV AX, i
+  ADD AX, 1
+  MOV T13, AX
+L13: MOV AX, T13
   MOV i, AX
-L24: JMP L16
-L25: MOV AX, T7
+L14: JMP L8
+L15: MOV AX, a
   CMP AX, 100
-  JL VRAI_25
-  MOV T13, 0
-  JMP FIN_CMP_25
-VRAI_25: MOV T13, 1
-FIN_CMP_25: NOP
-L26: MOV AX, T13
+  JL VRAI_15
+  MOV T14, 0
+  JMP FIN_CMP_15
+VRAI_15: MOV T14, 1
+FIN_CMP_15: NOP
+L16: MOV AX, T14
   CMP AX, 0
-  JE L29
-L27: MOV AX, 1
+  JE L19
+L17: MOV AX, 1
   MOV x, AX
-L28: JMP L30
-L29: MOV AX, 2
-  MOV x, AX
-L30: MOV AX, x
+L18: JMP L20
+L19: MOV AX, 2
+  MOV y, AX
+L20: MOV AX, x
   ADD AX, 10
-  MOV T14, AX
-L31:   ; Appel affichage pour T14
+  MOV T15, AX
+L21: MOV AX, T15
+  MOV z, AX
+L22: MOV AX, 0
+  MOV j, AX
+L23: MOV AX, 10
+  MOV c, AX
+L24: MOV AX, j
+  CMP AX, 5
+  JL VRAI_24
+  MOV T16, 0
+  JMP FIN_CMP_24
+VRAI_24: MOV T16, 1
+FIN_CMP_24: NOP
+L25: MOV AX, T16
+  CMP AX, 0
+  JE L31
+L26: MOV AX, c
+  ADD AX, j
+  MOV T18, AX
+L27: MOV AX, T18
+  MOV a, AX
+L28: MOV AX, j
+  ADD AX, 1
+  MOV T19, AX
+L29: MOV AX, T19
+  MOV j, AX
+L30: JMP L24
+L31:   ; Appel affichage pour z
 L32:   ; Appel affichage pour y
+L33:   ; Appel affichage pour a
+L34:   ; Appel affichage pour b
 
   MOV AH, 4Ch
   INT 21h

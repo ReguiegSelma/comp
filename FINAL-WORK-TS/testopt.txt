@@ -1,52 +1,68 @@
-PROGRAM Super
+PROGRAM Test
 DECL
-    INTEGER: a, b, c, x, y, z, i, j;
-    CONST k = 10;
+    INTEGER: a, b, c, x, y, z, i, j, n;
+    CONST p = 5;
 ENDDECL
 
 BEGIN
-    // --- 1. Expressions Communes & Propagation de Copies ---
+    // === 1. Expressions communes ===
     a = x + y;
-    b = x + y;       // A OPTIMISER : b = a (si x et y n'ont pas changé)
-    
-    // --- 2. Propagation & Folding (Calcul Constante) ---
-    x = 2 + 3;       // A OPTIMISER : x = 5
-    y = x * 4;       // A OPTIMISER : y = 20
-    
-    // --- 3. Code Mort & Analyse de Vivacité ---
-    z = a * 2;       // A OPTIMISER : Suppression (z est écrasé juste après)
-    z = 50;          // A LAISSER : z est utilisé dans le WRITE final
-    
-    c = b + 1;       // A OPTIMISER : Suppression (c n'est jamais lu)
-    
-    // --- 4. Le Piège de la Réaffectation (Interdit d'optimiser) ---
+    b = x + y;       // => doit devenir b = a (si x,y non modifiés)
+
+    // === 2. Propagation de constantes + pliage (folding) ===
+    x = 2 + 3;       // => x = 5
+    y = x * 4;       // => y = 20 (après propagation de x=5)
+    c = 10 / 2;      // => c = 5 (folding)
+
+    // === 3. Code mort : affectation écrasée avant usage ===
+    z = a * 2;       // => SUPPRIMER : écrasé par la suite
+    z = 50;          // => conservé, car utilisé dans WRITE final
+
+    // === 4. Code mort : variable jamais lue ===
+    n = b + 1;       // => SUPPRIMER : n jamais utilisé
+
+    // === 5. Piège de la réaffectation (interdit de propager) ===
     x = 10;
-    a = x + 5;       // Ici a = 15
-    x = 20;          // Réaffectation de x
-    b = x + 5;       // A LAISSER IMPERATIVEMENT : b doit valoir 25, pas 15 !
-    
-    // --- 5. Boucle WHILE (Structure de contrôle) ---
+    a = x + 5;       // a = 15 (si on propage 10)
+    x = 20;          // réaffectation
+    b = x + 5;       // b doit valoir 25, PAS 15
+
+    // === 6. Boucle avec invariant à sortir ===
     i = 0;
-    WHILE (i < k) {
-        // Invariant de boucle
-        x = 5 * 2;   // A OPTIMISER : Sortir de la boucle (x = 10)
-        
-        // Dépendance de boucle (Interdit de propager i)
-        y = x + i;   // A LAISSER IMPERATIVEMENT : i change à chaque tour
-        
-        i = i + 1;   // A LAISSER IMPERATIVEMENT : Compteur de boucle
+    WHILE (i < p) {
+        // Invariant : calcul constant
+        x = 5 * 2;   // => doit être sorti avant la boucle : x = 10
+
+        // dépendant de i => reste dans la boucle
+        y = x + i;   // x est invariant, mais l'opération dépend de i
+
+        i = i + 1;   // compteur
     }
 
-    // --- 6. Le Piège du Saut (Analyse de Flux) ---
+    // === 7. Branchement IF/ELSE (ne pas propager à travers la jointure) ===
     IF (a < 100) {
         x = 1;
     } ELSE {
-        x = 2;
+        y = 2;
     }
-    // A LAISSER IMPERATIVEMENT : On ne peut pas propager x ici 
-    // car sa valeur dépend du chemin pris (IF ou ELSE).
-    z = x + 10;      
+    // x ne doit pas être remplacé par 1 ou 2 dans le calcul suivant
+    z = x + 10;      // si a=15 => x=1 => z=11
 
-    WRITE(z);
-    WRITE(y);
+    // === 8. Autre invariant de boucle (copie d'invariant) ===
+    j = 0;
+    WHILE (j < 5) {
+        // invariant : t = 3 + 7 => t = 10
+        c = 3 + 7;          // => sorti
+        a = c + j;          // dépend de j => reste
+        j = j + 1;
+    }
+
+    // === 9. Expressions communes à travers blocs ===
+    // (après optimisations, peut révéler d'autres redondances)
+
+    // === 10. Vérification finale que les variables sont vivantes ===
+    WRITE(z);       // 11 normalement
+    WRITE(y);       // dépend de la boucle, dernière valeur
+    WRITE(a);       // dernière valeur
+    WRITE(b);       // 25 normalement
 END
