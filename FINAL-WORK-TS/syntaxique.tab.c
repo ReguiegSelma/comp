@@ -1965,16 +1965,14 @@ yyreduce:
         printf("Erreur Semantique ligne %d: variable '%s' non declaree\n", nb_lignes, (yyvsp[-2].str));
         nb_erreurs++;
     } else {
-        // Affiche le nom ET la valeur stockée dans la TS au moment de la compilation
         quad("WRITE", (yyvsp[-2].str), "", "");
-        printf(" Variable %s = %.2f\n", s->name, s->val);
     }
 }
-#line 1974 "syntaxique.tab.c"
+#line 1972 "syntaxique.tab.c"
     break;
 
 
-#line 1978 "syntaxique.tab.c"
+#line 1976 "syntaxique.tab.c"
 
       default: break;
     }
@@ -2167,7 +2165,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 591 "syntaxique.y"
+#line 589 "syntaxique.y"
 
 
 void yyerror(char *s) {}

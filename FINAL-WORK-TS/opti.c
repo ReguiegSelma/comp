@@ -156,7 +156,7 @@ void propagation_constantes()
         changement = 0;
 
         for (int i = 0; i < qc; i++) {
-            // Constant folding
+            // ---- Constant folding ----
             if ((strcmp(quad_table[i].op, "+") == 0 || strcmp(quad_table[i].op, "-") == 0 ||
                  strcmp(quad_table[i].op, "*") == 0 || strcmp(quad_table[i].op, "/") == 0) &&
                 est_constante(quad_table[i].op1) && est_constante(quad_table[i].op2))
@@ -170,10 +170,14 @@ void propagation_constantes()
                 else if (strcmp(quad_table[i].op, "*") == 0) res_val = v1 * v2;
                 else if (strcmp(quad_table[i].op, "/") == 0 && v2 != 0) res_val = v1 / v2;
 
+                
 
                 free(quad_table[i].op);
                 quad_table[i].op = strdup("=");
                 char temp[32];
+                if (res_val == (int)res_val)
+                 sprintf(temp, "%d", (int)res_val);
+                else
                 sprintf(temp, "%.2f", res_val);
                 free(quad_table[i].op1);
                 quad_table[i].op1 = strdup(temp);
@@ -184,56 +188,29 @@ void propagation_constantes()
                 continue;
             }
 
-            // Propagation de constantes
+            // ---- Propagation de constante ----
             if (strcmp(quad_table[i].op, "=") == 0 && est_constante(quad_table[i].op1) && strlen(quad_table[i].op2) == 0)
             {
                 char *var = quad_table[i].res;
                 char *valeur = quad_table[i].op1;
 
-                int est_modifiee = 0;
                 for (int j = i + 1; j < qc; j++) {
-                    if (strcmp(quad_table[j].res, var) == 0) { est_modifiee = 1; break; }
-                    
-                    // Vérifier modification indirecte via T12 = i + 1; i = T12
-                    if ((strcmp(quad_table[j].op, "+") == 0 || strcmp(quad_table[j].op, "-") == 0) &&
-                        (strcmp(quad_table[j].op1, var) == 0 || strcmp(quad_table[j].op2, var) == 0))
-                    {
-                        for (int k = j + 1; k < qc; k++) {
-                            if (strcmp(quad_table[k].op, "=") == 0 &&
-                                strcmp(quad_table[k].op1, quad_table[j].res) == 0 &&
-                                strcmp(quad_table[k].res, var) == 0)
-                            { est_modifiee = 1; break; }
-                            if (strcmp(quad_table[k].res, var) == 0) break;
-                        }
-                        if (est_modifiee) break;
+                    if (strcmp(quad_table[j].res, var) == 0) break;
+
+                    // ** Arrêt obligatoire avant une cible de saut (point de fusion) **
+                    if (est_cible_de_saut(j)) break;
+
+                    if (strcmp(quad_table[j].op1, var) == 0) {
+                        free(quad_table[j].op1);
+                        quad_table[j].op1 = strdup(valeur);
+                        nb_optimisations++;
+                        changement = 1;
                     }
-                    
-                    if (strcmp(quad_table[j].op, "BR") == 0 && atoi(quad_table[j].res) <= i) {
-                        for (int k = atoi(quad_table[j].res); k < j; k++) {
-                            if (strcmp(quad_table[k].res, var) == 0) { est_modifiee = 1; break; }
-                        }
-                        if (est_modifiee) break;
-                    }
-                }
-
-                if (!est_modifiee) {
-                    for (int j = i + 1; j < qc; j++) {
-                        if (strcmp(quad_table[j].res, var) == 0) break;
-
-                        if (est_cible_de_saut(j)) break;
-
-                        if (strcmp(quad_table[j].op1, var) == 0) {
-                            free(quad_table[j].op1);
-                            quad_table[j].op1 = strdup(valeur);
-                            nb_optimisations++;
-                            changement = 1;
-                        }
-                        if (strcmp(quad_table[j].op2, var) == 0) {
-                            free(quad_table[j].op2);
-                            quad_table[j].op2 = strdup(valeur);
-                            nb_optimisations++;
-                            changement = 1;
-                        }
+                    if (strcmp(quad_table[j].op2, var) == 0) {
+                        free(quad_table[j].op2);
+                        quad_table[j].op2 = strdup(valeur);
+                        nb_optimisations++;
+                        changement = 1;
                     }
                 }
             }
@@ -241,52 +218,55 @@ void propagation_constantes()
     }
 }
 
+
 void suppression_code_mort() {
     int nb_suppressions = 0;
     int changement = 1;
 
     while (changement) {
         changement = 0;
+
         for (int i = qc - 1; i >= 0; i--) {
-            char* var_dest = quad_table[i].res;
+            char *var_dest = quad_table[i].res;
 
             if (strlen(var_dest) == 0 || est_saut(quad_table[i].op) || 
                 strcmp(quad_table[i].op, "WRITE") == 0) continue;
 
             int est_utilisee = 0;
-            int skip_until = -1;   // cible du dernier BR avant, -1 = pas de région
+            int skip_until = -1;   // indice de sortie de la région "autre branche"
 
             for (int j = i + 1; j < qc; j++) {
-                // Si on sort de la région protégée
+                // Sortie de la région protégée
                 if (skip_until != -1 && j >= skip_until)
                     skip_until = -1;
 
-                // Gestion des sauts
+                // Saut inconditionnel : démarre une région jusqu'à sa cible
                 if (strcmp(quad_table[j].op, "BR") == 0) {
                     int cible = atoi(quad_table[j].res);
-                    if (cible > j) {               // saut en avant
+                    if (cible > j) {
                         skip_until = cible;
-                    } else if (cible <= i) {       // saut arrière (boucle)
+                    } else if (cible <= i) {
+                        // Saut arrière (boucle) => variable vivante
                         est_utilisee = 1;
                         break;
                     }
                 }
 
-                // 1. Utilisation → variable vivante
+                // Utilisation → vivante
                 if (strcmp(quad_table[j].op1, var_dest) == 0 ||
                     strcmp(quad_table[j].op2, var_dest) == 0) {
                     est_utilisee = 1;
                     break;
                 }
 
-                // 2. Réaffectation de la même variable
+                // Réaffectation de la même variable
                 if (strcmp(quad_table[j].res, var_dest) == 0) {
                     if (skip_until != -1 && j < skip_until) {
-                        // Réaffectation dans une autre branche → on l'ignore
+                        // Dans l'autre branche, on ignore cette réaffectation
                         continue;
                     } else {
-                        // Même chemin ou après fusion → écrasement avant usage → morte
-                        break;   // est_utilisee reste 0
+                        // Même chemin → écrasement avant usage → morte
+                        break;
                     }
                 }
             }
@@ -314,151 +294,106 @@ void optimisation_boucles()
     int nb_deplacements = 0;
     int modifie = 1;
 
-    while (modifie)
-    {
+    while (modifie) {
         modifie = 0;
-        for (int i = 0; i < qc; i++)
-        {
-            if (strcmp(quad_table[i].op, "BR") == 0 && strlen(quad_table[i].res) > 0)
-            {
+        for (int i = 0; i < qc; i++) {
+            if (strcmp(quad_table[i].op, "BR") == 0 && strlen(quad_table[i].res) > 0) {
                 int cible = atoi(quad_table[i].res);
-                if (cible > 0 && cible < i)
-                {
+                if (cible > 0 && cible < i) {
 
-                    // ---------- 1. Détection itérative des invariants ----------
+                    // Détection itérative des invariants (y compris les copies d'invariants)
                     int *a_deplacer = malloc((i - cible) * sizeof(int));
                     int nb = 0;
-                    int ajout = 1;   // flag pour continuer tant qu’on découvre de nouveaux invariants
-
-                    // Tableau des résultats invariants (variables temporaires ou utilisateur)
-                    char **inv_res = malloc((i - cible) * sizeof(char*));
+                    int ajout = 1;
+                    char **inv_res = malloc((i - cible) * sizeof(char *));
                     int nb_inv = 0;
 
-                    while (ajout)
-                    {
+                    while (ajout) {
                         ajout = 0;
-                        for (int j = cible; j < i; j++)
-                        {
-                            // Éviter de traiter plusieurs fois le même quad
+                        for (int j = cible; j < i; j++) {
                             int deja_pris = 0;
                             for (int k = 0; k < nb; k++)
                                 if (a_deplacer[k] == j) { deja_pris = 1; break; }
                             if (deja_pris) continue;
 
                             int est_invariant = 0;
-
-                            // Cas 1 : affectation simple d'une constante littérale
                             if (strcmp(quad_table[j].op, "=") == 0 &&
                                 est_constante(quad_table[j].op1) &&
                                 strlen(quad_table[j].op2) == 0)
-                            {
                                 est_invariant = 1;
-                            }
-                            // Cas 2 : opération arithmétique sur deux constantes
                             else if ((strcmp(quad_table[j].op, "+") == 0 ||
                                       strcmp(quad_table[j].op, "-") == 0 ||
                                       strcmp(quad_table[j].op, "*") == 0 ||
                                       strcmp(quad_table[j].op, "/") == 0) &&
                                      est_constante(quad_table[j].op1) &&
                                      est_constante(quad_table[j].op2))
-                            {
                                 est_invariant = 1;
-                            }
-                            // Cas 3 : copie d’une variable déjà déclarée invariante
                             else if (strcmp(quad_table[j].op, "=") == 0 &&
-                                     strlen(quad_table[j].op2) == 0)
-                            {
+                                     strlen(quad_table[j].op2) == 0) {
                                 for (int r = 0; r < nb_inv; r++)
-                                    if (strcmp(quad_table[j].op1, inv_res[r]) == 0)
-                                    {
+                                    if (strcmp(quad_table[j].op1, inv_res[r]) == 0) {
                                         est_invariant = 1;
                                         break;
                                     }
                             }
 
-                            // Vérifier que l’instruction n’est pas la cible d’un saut
-                            if (est_invariant)
-                            {
-                                int est_cible = 0;
-                                for (int k = 0; k < qc; k++)
-                                    if (est_saut(quad_table[k].op) && atoi(quad_table[k].res) == j)
-                                    {
-                                        est_cible = 1;
-                                        break;
-                                    }
-                                if (!est_cible)
-                                {
-                                    a_deplacer[nb++] = j;
-                                    // Enregistrer la variable résultat de cet invariant
-                                    inv_res[nb_inv] = strdup(quad_table[j].res);
-                                    nb_inv++;
-                                    ajout = 1;
-                                }
+                            if (est_invariant && !est_cible_de_saut(j)) {
+                                a_deplacer[nb++] = j;
+                                inv_res[nb_inv++] = strdup(quad_table[j].res);
+                                ajout = 1;
                             }
                         }
                     }
-
-                    // Libération des chaînes inv_res
                     for (int r = 0; r < nb_inv; r++) free(inv_res[r]);
                     free(inv_res);
 
-                    // ---------- 2. Déplacement ----------
-                    if (nb > 0)
-                    {
-                        // Construction d’un nouveau tableau
-                        quad_struct *nouveau = malloc(qc * sizeof(quad_struct));
+                    if (nb > 0) {
+                        // Construction d'un nouveau tableau
+                        quad_struct *nouveau = malloc((qc + nb) * sizeof(quad_struct));
                         int pos = 0;
 
                         // Avant la boucle
                         for (int j = 0; j < cible; j++)
                             nouveau[pos++] = quad_table[j];
 
-                        // Invariants (ordre croissant)
+                        // Invariants
                         for (int j = 0; j < nb; j++)
                             nouveau[pos++] = quad_table[a_deplacer[j]];
 
                         // Corps restant
-                        for (int j = cible; j < i; j++)
-                        {
+                        for (int j = cible; j < i; j++) {
                             int sauter = 0;
                             for (int k = 0; k < nb; k++)
                                 if (a_deplacer[k] == j) { sauter = 1; break; }
-                            if (!sauter)
-                                nouveau[pos++] = quad_table[j];
+                            if (!sauter) nouveau[pos++] = quad_table[j];
                         }
 
-                        // Fin du programme (après le BR)
+                        // Fin (à partir du BR)
                         for (int j = i; j < qc; j++)
                             nouveau[pos++] = quad_table[j];
 
                         int nv_qc = pos;
 
-                        // Table de correspondance ancien → nouvel indice
+                        // Table de correspondance ancien indice -> nouvel indice
                         int *corresp = malloc(qc * sizeof(int));
-                        for (int ancien = 0; ancien < qc; ancien++)
-                        {
-                            corresp[ancien] = -1;
-                            for (int k = 0; k < nv_qc; k++)
-                            {
-                                if (quad_table[ancien].op == nouveau[k].op &&
-                                    strcmp(quad_table[ancien].op1, nouveau[k].op1) == 0 &&
-                                    strcmp(quad_table[ancien].op2, nouveau[k].op2) == 0 &&
-                                    strcmp(quad_table[ancien].res, nouveau[k].res) == 0)
-                                {
-                                    corresp[ancien] = k;
+                        for (int anc = 0; anc < qc; anc++) {
+                            corresp[anc] = -1;
+                            for (int k = 0; k < nv_qc; k++) {
+                                if (quad_table[anc].op == nouveau[k].op &&
+                                    strcmp(quad_table[anc].op1, nouveau[k].op1) == 0 &&
+                                    strcmp(quad_table[anc].op2, nouveau[k].op2) == 0 &&
+                                    strcmp(quad_table[anc].res, nouveau[k].res) == 0) {
+                                    corresp[anc] = k;
                                     break;
                                 }
                             }
                         }
 
-                        // Mise à jour des cibles de saut
-                        for (int k = 0; k < nv_qc; k++)
-                        {
-                            if (est_saut(nouveau[k].op) && strlen(nouveau[k].res) > 0)
-                            {
+                        // Mise à jour des sauts
+                        for (int k = 0; k < nv_qc; k++) {
+                            if (est_saut(nouveau[k].op) && strlen(nouveau[k].res) > 0) {
                                 int anc = atoi(nouveau[k].res);
-                                if (anc >= 0 && anc < qc && corresp[anc] != -1)
-                                {
+                                if (anc >= 0 && anc < qc && corresp[anc] != -1) {
                                     char temp[16];
                                     sprintf(temp, "%d", corresp[anc]);
                                     free(nouveau[k].res);
@@ -477,13 +412,11 @@ void optimisation_boucles()
                         nb_deplacements += nb;
                         modifie = 1;
                     }
-
                     free(a_deplacer);
                 }
             }
         }
     }
-
 }
 
 void optimiser_code()

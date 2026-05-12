@@ -137,7 +137,11 @@ void ecrire_ds(FILE* f) {
                 // On écrit toutes les variables trouvées (y compris les T1, T2 mis par le compilo)
                 if (cur->taille > 1) {
                     fprintf(f, "  %s DW %d DUP(0)\n", cur->name, cur->taille);
-                } else {
+                } else if (strcmp(cur->code, "cst") == 0) {
+                // CONST -> EQU
+                fprintf(f, "  %s EQU %d\n", cur->name, (int)cur->val);
+                 }
+                else {
                     fprintf(f, "  %s DW ?\n", cur->name);
                 }
                 cur = cur->next;

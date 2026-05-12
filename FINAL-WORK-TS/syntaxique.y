@@ -580,9 +580,7 @@ WRITE_I: WRITE PARG IDF PARD PV {
         printf("Erreur Semantique ligne %d: variable '%s' non declaree\n", nb_lignes, $3);
         nb_erreurs++;
     } else {
-        // Affiche le nom ET la valeur stockée dans la TS au moment de la compilation
         quad("WRITE", $3, "", "");
-        printf(" Variable %s = %.2f\n", s->name, s->val);
     }
 }
 
