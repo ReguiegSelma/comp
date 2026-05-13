@@ -124,24 +124,33 @@ float obtenir_val(const char *name)
     return 0;
 }
 
-void ecrire_ds(FILE* f) {
-    if (f == NULL) return;
+void ecrire_ds(FILE *f)
+{
+    if (f == NULL)
+        return;
 
     fprintf(f, "  ; --- Variables et Temporaires de la TS ---\n");
-    
+
     // 1. On parcourt la table de hachage normalement
-    if (ts_id.capacity > 0) {
-        for (size_t i = 0; i < ts_id.capacity; i++) {
+    if (ts_id.capacity > 0)
+    {
+        for (size_t i = 0; i < ts_id.capacity; i++)
+        {
             Symbole *cur = ts_id.buckets[i];
-            while (cur != NULL) {
+            while (cur != NULL)
+            {
                 // On écrit toutes les variables trouvées (y compris les T1, T2 mis par le compilo)
-                if (cur->taille > 1) {
+                if (cur->taille > 1)
+                {
                     fprintf(f, "  %s DW %d DUP(0)\n", cur->name, cur->taille);
-                } else if (strcmp(cur->code, "cst") == 0) {
-                // CONST -> EQU
-                fprintf(f, "  %s EQU %d\n", cur->name, (int)cur->val);
-                 }
-                else {
+                }
+                else if (strcmp(cur->code, "cst") == 0)
+                {
+                    // CONST -> EQU
+                    fprintf(f, "  %s EQU %d\n", cur->name, (int)cur->val);
+                }
+                else
+                {
                     fprintf(f, "  %s DW ?\n", cur->name);
                 }
                 cur = cur->next;

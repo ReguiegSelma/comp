@@ -4,7 +4,7 @@
 #include "quad.h"
 #include "ts.h"
 
-// Remarque : Assurez-vous que votre ts.h permet de parcourir les symboles
+
 extern void ecrire_ds(FILE* f); 
 
 void generer_assembleur(const char* nom_fichier) {
@@ -16,14 +16,12 @@ void generer_assembleur(const char* nom_fichier) {
     fprintf(f, "DATA SEGMENT\n");
     fprintf(f, "  ; --- Variables issues de la TS ---\n");
     
-    // IMPORTANT : Vous devez appeler une fonction de votre ts.c 
-    // qui fait : fprintf(f, "  %s DW ?\n", element->name);
     ecrire_ds(f); 
 
     fprintf(f, "DATA ENDS\n\n");
 
     // 2. Segment de Pile
-    fprintf(f, "STACK SEGMENT\n  DW 128 DUP(0)\nSTACK ENDS\n\n");
+    fprintf(f, "STACK SEGMENT\n  DW 64 DUP(0)\nSTACK ENDS\n\n");
 
     // 3. Segment de Code
     fprintf(f, "CODE SEGMENT\n  ASSUME CS:CODE, DS:DATA, SS:STACK\n\nSTART:\n");
@@ -35,7 +33,7 @@ void generer_assembleur(const char* nom_fichier) {
 
         // --- AFFECTATION (=) ---
         if (strcmp(quad_table[i].op, "=") == 0) {
-            // Gestion des réels : on ignore la partie après le point pour le 8086 standard
+            // Gestion des réels : on ignore la partie après le point pour le 8086 pas de reel
             char val[20];
             strcpy(val, quad_table[i].op1);
             char *dot = strchr(val, '.');
@@ -58,10 +56,55 @@ void generer_assembleur(const char* nom_fichier) {
             fprintf(f, "  MOV %s, AX\n", quad_table[i].res);
         }
         // --- COMPARAISONS (INF, SUP, etc.) ---
-        else if (strcmp(quad_table[i].op, "INF") == 0) {
+       else if (strcmp(quad_table[i].op, "INF") == 0) {
             fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
             fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
-            fprintf(f, "  JL VRAI_%d\n", i);  // Jump if Less
+            fprintf(f, "  JL VRAI_%d\n", i);
+            fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
+            fprintf(f, "  JMP FIN_CMP_%d\n", i);
+            fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
+            fprintf(f, "FIN_CMP_%d: NOP\n", i);
+        }
+        else if (strcmp(quad_table[i].op, "SUP") == 0) {
+            fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
+            fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
+            fprintf(f, "  JG VRAI_%d\n", i);       // Jump if Greater
+            fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
+            fprintf(f, "  JMP FIN_CMP_%d\n", i);
+            fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
+            fprintf(f, "FIN_CMP_%d: NOP\n", i);
+        }
+        else if (strcmp(quad_table[i].op, "INFEQ") == 0) {
+            fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
+            fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
+            fprintf(f, "  JLE VRAI_%d\n", i);      // Jump if Less or Equal
+            fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
+            fprintf(f, "  JMP FIN_CMP_%d\n", i);
+            fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
+            fprintf(f, "FIN_CMP_%d: NOP\n", i);
+        }
+        else if (strcmp(quad_table[i].op, "SUPEQ") == 0) {
+            fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
+            fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
+            fprintf(f, "  JGE VRAI_%d\n", i);      // Jump if Greater or Equal
+            fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
+            fprintf(f, "  JMP FIN_CMP_%d\n", i);
+            fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
+            fprintf(f, "FIN_CMP_%d: NOP\n", i);
+        }
+        else if (strcmp(quad_table[i].op, "EQ") == 0) {
+            fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
+            fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
+            fprintf(f, "  JE VRAI_%d\n", i);       // Jump if Equal
+            fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
+            fprintf(f, "  JMP FIN_CMP_%d\n", i);
+            fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
+            fprintf(f, "FIN_CMP_%d: NOP\n", i);
+        }
+        else if (strcmp(quad_table[i].op, "NEQ") == 0) {
+            fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
+            fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
+            fprintf(f, "  JNE VRAI_%d\n", i);      // Jump if Not Equal
             fprintf(f, "  MOV %s, 0\n", quad_table[i].res);
             fprintf(f, "  JMP FIN_CMP_%d\n", i);
             fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
@@ -78,8 +121,7 @@ void generer_assembleur(const char* nom_fichier) {
         }
         // --- AFFICHAGE (WRITE) ---
         else if (strcmp(quad_table[i].op, "WRITE") == 0) {
-            fprintf(f, "  ; Appel affichage pour %s\n", quad_table[i].op1);
-            // Ici, l'affichage nécessite une routine complexe en assembleur.
+            fprintf(f, " %s ; \n", quad_table[i].op1);
         }
     }
 

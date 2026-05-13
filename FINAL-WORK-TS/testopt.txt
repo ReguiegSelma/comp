@@ -29,7 +29,7 @@ BEGIN
 
     // === 6. Boucle avec invariant à sortir ===
     i = 0;
-    WHILE (i < p) {
+    WHILE (i <= p) {
         // Invariant : calcul constant
         x = 5 * 2;   // => doit être sorti avant la boucle : x = 10
 
@@ -40,7 +40,7 @@ BEGIN
     }
 
     // === 7. Branchement IF/ELSE (ne pas propager à travers la jointure) ===
-    IF (a < 100) {
+    IF (a > 100) {
         x = 1;
     } ELSE {
         y = 2;

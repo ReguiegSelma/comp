@@ -50,14 +50,7 @@ L1: MOV AX, 25
   MOV b, AX
 L2: MOV AX, 0
   MOV i, AX
-L3: MOV AX, i
-  CMP AX, p
-  JL VRAI_3
-  MOV T10, 0
-  JMP FIN_CMP_3
-VRAI_3: MOV T10, 1
-FIN_CMP_3: NOP
-L4: MOV AX, T10
+L3: L4: MOV AX, T10
   CMP AX, 0
   JE L10
 L5: MOV AX, 10
@@ -73,7 +66,7 @@ L8: MOV AX, T13
 L9: JMP L3
 L10: MOV AX, a
   CMP AX, 100
-  JL VRAI_10
+  JG VRAI_10
   MOV T14, 0
   JMP FIN_CMP_10
 VRAI_10: MOV T14, 1
@@ -114,10 +107,10 @@ L22: MOV AX, j
 L23: MOV AX, T19
   MOV j, AX
 L24: JMP L18
-L25:   ; Appel affichage pour z
-L26:   ; Appel affichage pour y
-L27:   ; Appel affichage pour a
-L28:   ; Appel affichage pour b
+L25:  z ; 
+L26:  y ; 
+L27:  a ; 
+L28:  b ; 
 
   MOV AH, 4Ch
   INT 21h

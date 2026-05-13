@@ -67,7 +67,7 @@ int est_saut(char *op)
            strcmp(op, "BNZ") == 0 || strcmp(op, "BG") == 0;
 }
 
-int est_vivante(char* var, int index_actuel) {
+/*int est_vivante(char* var, int index_actuel) {
     for (int j = index_actuel + 1; j < qc; j++) {
         // Utilisation
         if (strcmp(quad_table[j].op1, var) == 0 || 
@@ -81,7 +81,7 @@ int est_vivante(char* var, int index_actuel) {
         // Ne plus s'arrêter sur un saut
     }
     return 0;
-}
+}*/
 
 void mettre_a_jour_adresses_sauts(int index_supprime) {
     for (int i = 0; i < qc; i++) {
