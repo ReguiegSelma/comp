@@ -67,22 +67,6 @@ int est_saut(char *op)
            strcmp(op, "BNZ") == 0 || strcmp(op, "BG") == 0;
 }
 
-/*int est_vivante(char* var, int index_actuel) {
-    for (int j = index_actuel + 1; j < qc; j++) {
-        // Utilisation
-        if (strcmp(quad_table[j].op1, var) == 0 || 
-            strcmp(quad_table[j].op2, var) == 0) {
-            return 1; 
-        }
-        // Réaffectation (écrasement)
-        if (strcmp(quad_table[j].res, var) == 0) {
-            return 0; 
-        }
-        // Ne plus s'arrêter sur un saut
-    }
-    return 0;
-}*/
-
 void mettre_a_jour_adresses_sauts(int index_supprime) {
     for (int i = 0; i < qc; i++) {
         if (est_saut(quad_table[i].op)) {
@@ -138,7 +122,6 @@ void elimination_expressions_communes()
     }
 }
 
-// Vérifie si un index est la cible d'un saut (BR, BZ, BN...)
 int est_cible_de_saut(int index) {
     for (int i = 0; i < qc; i++) {
         if (est_saut(quad_table[i].op) && atoi(quad_table[i].res) == index)
@@ -156,7 +139,6 @@ void propagation_constantes()
         changement = 0;
 
         for (int i = 0; i < qc; i++) {
-            // ---- Constant folding ----
             if ((strcmp(quad_table[i].op, "+") == 0 || strcmp(quad_table[i].op, "-") == 0 ||
                  strcmp(quad_table[i].op, "*") == 0 || strcmp(quad_table[i].op, "/") == 0) &&
                 est_constante(quad_table[i].op1) && est_constante(quad_table[i].op2))
@@ -197,7 +179,6 @@ void propagation_constantes()
                 for (int j = i + 1; j < qc; j++) {
                     if (strcmp(quad_table[j].res, var) == 0) break;
 
-                    // ** Arrêt obligatoire avant une cible de saut (point de fusion) **
                     if (est_cible_de_saut(j)) break;
 
                     if (strcmp(quad_table[j].op1, var) == 0) {
@@ -348,7 +329,7 @@ void optimisation_boucles()
                     free(inv_res);
 
                     if (nb > 0) {
-                        // Construction d'un nouveau tableau
+                        
                         quad_struct *nouveau = malloc((qc + nb) * sizeof(quad_struct));
                         int pos = 0;
 
@@ -438,7 +419,7 @@ void optimiser_code()
         changements = !comparer_quads();
     }
 
-    printf("  \n   OPTIMISATION TERMINEE EN %d PASSE(S)                  \n", iteration);
+    printf("  \n   OPTIMISATION TERMINEE EN %d PASSE(S)      \n", iteration);
 
     printf("\n--- CODE OPTIMISE FINAL ---\n");
     afficher_quads();

@@ -11,29 +11,23 @@ void generer_assembleur(const char* nom_fichier) {
     FILE* f = fopen(nom_fichier, "w");
     if (!f) return;
 
-    // 1. En-tête et Segment de données
     fprintf(f, "TITLE %s\n", nom_fichier);
     fprintf(f, "DATA SEGMENT\n");
-    fprintf(f, "  ; --- Variables issues de la TS ---\n");
+    fprintf(f, "  ; --- Variables  de la TS ---\n");
     
     ecrire_ds(f); 
 
     fprintf(f, "DATA ENDS\n\n");
 
-    // 2. Segment de Pile
     fprintf(f, "STACK SEGMENT\n  DW 64 DUP(0)\nSTACK ENDS\n\n");
 
-    // 3. Segment de Code
     fprintf(f, "CODE SEGMENT\n  ASSUME CS:CODE, DS:DATA, SS:STACK\n\nSTART:\n");
     fprintf(f, "  MOV AX, DATA\n  MOV DS, AX\n\n");
 
-    // 4. Traduction des Quadruplets
     for (int i = 0; i < qc; i++) {
         fprintf(f, "L%d: ", i); 
 
-        // --- AFFECTATION (=) ---
         if (strcmp(quad_table[i].op, "=") == 0) {
-            // Gestion des réels : on ignore la partie après le point pour le 8086 pas de reel
             char val[20];
             strcpy(val, quad_table[i].op1);
             char *dot = strchr(val, '.');
@@ -42,20 +36,19 @@ void generer_assembleur(const char* nom_fichier) {
             fprintf(f, "MOV AX, %s\n", val);
             fprintf(f, "  MOV %s, AX\n", quad_table[i].res);
         }
-        // --- ADDITION (+) ---
+
         else if (strcmp(quad_table[i].op, "+") == 0) {
             fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
             fprintf(f, "  ADD AX, %s\n", quad_table[i].op2);
             fprintf(f, "  MOV %s, AX\n", quad_table[i].res);
         }
-        // --- MULTIPLICATION (*) ---
+
         else if (strcmp(quad_table[i].op, "*") == 0) {
             fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
             fprintf(f, "  MOV BX, %s\n", quad_table[i].op2);
             fprintf(f, "  MUL BX\n"); // Résultat dans AX
             fprintf(f, "  MOV %s, AX\n", quad_table[i].res);
         }
-        // --- COMPARAISONS (INF, SUP, etc.) ---
        else if (strcmp(quad_table[i].op, "INF") == 0) {
             fprintf(f, "MOV AX, %s\n", quad_table[i].op1);
             fprintf(f, "  CMP AX, %s\n", quad_table[i].op2);
@@ -110,7 +103,6 @@ void generer_assembleur(const char* nom_fichier) {
             fprintf(f, "VRAI_%d: MOV %s, 1\n", i, quad_table[i].res);
             fprintf(f, "FIN_CMP_%d: NOP\n", i);
         }
-        // --- BRANCHEMENTS (BR, BZ) ---
         else if (strcmp(quad_table[i].op, "BR") == 0) {
             fprintf(f, "JMP L%s\n", quad_table[i].res);
         }
@@ -119,10 +111,7 @@ void generer_assembleur(const char* nom_fichier) {
             fprintf(f, "  CMP AX, 0\n");
             fprintf(f, "  JE L%s\n", quad_table[i].res);
         }
-        // --- AFFICHAGE (WRITE) ---
-        else if (strcmp(quad_table[i].op, "WRITE") == 0) {
-            fprintf(f, " %s ; \n", quad_table[i].op1);
-        }
+         
     }
 
     // 5. Fin du programme

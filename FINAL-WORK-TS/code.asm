@@ -1,40 +1,18 @@
 TITLE code.asm
 DATA SEGMENT
-  ; --- Variables issues de la TS ---
+  ; --- Variables  de la TS ---
   ; --- Variables et Temporaires de la TS ---
-  T12 DW ?
-  T13 DW ?
-  T14 DW ?
-  T15 DW ?
-  T16 DW ?
-  T17 DW ?
-  T18 DW ?
-  T19 DW ?
   a DW ?
-  b DW ?
-  c DW ?
   i DW ?
-  j DW ?
-  n DW ?
   T1 DW ?
-  p EQU 5
   T2 DW ?
   T3 DW ?
   T4 DW ?
-  T5 DW ?
-  T6 DW ?
-  T7 DW ?
-  T8 DW ?
-  T9 DW ?
   x DW ?
-  y DW ?
-  z DW ?
-  T10 DW ?
-  T11 DW ?
 DATA ENDS
 
 STACK SEGMENT
-  DW 128 DUP(0)
+  DW 64 DUP(0)
 STACK ENDS
 
 CODE SEGMENT
@@ -44,74 +22,29 @@ START:
   MOV AX, DATA
   MOV DS, AX
 
-L0: MOV AX, 15
-  MOV a, AX
-L1: MOV AX, 25
-  MOV b, AX
-L2: MOV AX, 0
-  MOV i, AX
-L3: L4: MOV AX, T10
-  CMP AX, 0
-  JE L10
-L5: MOV AX, 10
-  ADD AX, i
-  MOV T12, AX
-L6: MOV AX, T12
-  MOV y, AX
-L7: MOV AX, i
-  ADD AX, 1
-  MOV T13, AX
-L8: MOV AX, T13
-  MOV i, AX
-L9: JMP L3
-L10: MOV AX, a
-  CMP AX, 100
-  JG VRAI_10
-  MOV T14, 0
-  JMP FIN_CMP_10
-VRAI_10: MOV T14, 1
-FIN_CMP_10: NOP
-L11: MOV AX, T14
-  CMP AX, 0
-  JE L14
-L12: MOV AX, 1
+L0: MOV AX, 10
   MOV x, AX
-L13: JMP L15
-L14: MOV AX, 2
-  MOV y, AX
-L15: MOV AX, x
-  ADD AX, 10
-  MOV T15, AX
-L16: MOV AX, T15
-  MOV z, AX
-L17: MOV AX, 0
-  MOV j, AX
-L18: MOV AX, j
-  CMP AX, 5
-  JL VRAI_18
-  MOV T16, 0
-  JMP FIN_CMP_18
-VRAI_18: MOV T16, 1
-FIN_CMP_18: NOP
-L19: MOV AX, T16
+L1: MOV AX, 0
+  MOV i, AX
+L2: MOV AX, i
+  CMP AX, 4
+  JL VRAI_2
+  MOV T3, 0
+  JMP FIN_CMP_2
+VRAI_2: MOV T3, 1
+FIN_CMP_2: NOP
+L3: MOV AX, T3
   CMP AX, 0
-  JE L25
-L20: MOV AX, 10
-  ADD AX, j
-  MOV T18, AX
-L21: MOV AX, T18
+  JE L8
+L4: MOV AX, i
   MOV a, AX
-L22: MOV AX, j
+L5: MOV AX, i
   ADD AX, 1
-  MOV T19, AX
-L23: MOV AX, T19
-  MOV j, AX
-L24: JMP L18
-L25:  z ; 
-L26:  y ; 
-L27:  a ; 
-L28:  b ; 
-
+  MOV T4, AX
+L6: MOV AX, T4
+  MOV i, AX
+L7: JMP L2
+L8: L9: L10: 
   MOV AH, 4Ch
   INT 21h
 CODE ENDS

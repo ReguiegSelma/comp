@@ -139,7 +139,6 @@ void ecrire_ds(FILE *f)
             Symbole *cur = ts_id.buckets[i];
             while (cur != NULL)
             {
-                // On écrit toutes les variables trouvées (y compris les T1, T2 mis par le compilo)
                 if (cur->taille > 1)
                 {
                     fprintf(f, "  %s DW %d DUP(0)\n", cur->name, cur->taille);
